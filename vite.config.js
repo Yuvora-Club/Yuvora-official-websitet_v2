@@ -4,7 +4,7 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // Required for GitHub Pages project site:
-  // https://Yuvora-Club.github.io/Yuvora-official-websitet_v2/
-  base: '/Yuvora-official-websitet_v2/',
+  // Custom apex domain (e.g. yuvora.org) serves from root,
+  // so base must be '/'. (Project pages needed '/repo-name/'.)
+  base: '/',
 })
