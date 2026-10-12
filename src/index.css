@@ -839,7 +839,7 @@ footer::before {
   padding-top: 12px;
   border-top: 1.5px dashed #d9cdb4;
 }
-.member-socials a {
+.member-socials a:not(.member-contact) {
   width: 38px; height: 38px;
   border-radius: 50%;
   border: 1.5px solid var(--moss-deep);
@@ -848,8 +848,35 @@ footer::before {
   display: grid; place-items: center;
   transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
-.member-socials a:hover { transform: translateY(-2px); background: var(--moss-deep); color: #f6efdc; }
+.member-socials a:not(.member-contact):hover { transform: translateY(-2px); background: var(--moss-deep); color: #f6efdc; }
 .member-socials svg { width: 18px; height: 18px; }
+/* Contact pill lives inside the same row — keep it a pill, not a 38px circle. */
+.member-socials .member-contact {
+  width: auto;
+  height: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 15px;
+  border: 1px solid #d8cbb0;
+  border-radius: 999px;
+  background: #f7f1e3;
+  color: #42563a;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.member-socials .member-contact:hover {
+  background: #d4e2c8;
+  transform: translateY(-1px);
+}
+.member-socials .member-contact:focus-visible {
+  outline: 2px solid var(--moss);
+  outline-offset: 3px;
+}
 .member-pending {
   margin: auto 0 0;
   font-family: var(--hand);
