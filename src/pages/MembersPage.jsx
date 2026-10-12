@@ -1,7 +1,7 @@
 const MEMBERS = [
   {
     id: 1,
-    name: "Rishit Manchala",
+    name: "Rishith Manchala",
     role: "Leader",
     email: "rishithmanchala989@gmail.com",
   },
@@ -31,7 +31,7 @@ const MEMBERS = [
   },
   {
     id: 6,
-    name: "Guru Charan Garikiparti",
+    name: "Guru Charan Garikapati",
     role: "Co-Leader",
     email: "mrgurucharan23@gmail.com",
   },
