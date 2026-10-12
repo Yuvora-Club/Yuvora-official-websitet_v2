@@ -1,0 +1,21 @@
+{
+  "name": "yuvora-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Yuvora fresh backend — Google/Firebase ecosystem. First endpoint: POST /api/auth/register (create account + join).",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "firebase-admin": "^12.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
