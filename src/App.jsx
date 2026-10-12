@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import MembersPage from "./pages/MembersPage.jsx";
+import NotFoundPage from "./pages/NotFoundPage.jsx";
 
 const HOME_TITLE = "Yuvora — Student-Led Club | Play. Build. Gather.";
 const MEMBERS_TITLE = "Members — Yuvora | Meet the crew";
+const NOTFOUND_TITLE = "404 — Wandered off the trail · Yuvora";
 
 function getRoute() {
   if (typeof window === "undefined") return "home";
+  if (window.location.hash === "#/members") return "members";
   const path = (window.location.pathname || "/").replace(/\/+$/, "") || "/";
-  if (path === "/members" || window.location.hash === "#/members") return "members";
-  return "home";
+  if (path === "/members") return "members";
+  if (path === "/") return "home";
+  return "notfound";
 }
 
 const SPORTS = [
@@ -168,8 +172,13 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    document.title = route === "members" ? MEMBERS_TITLE : HOME_TITLE;
-    if (route === "members") {
+    document.title =
+      route === "members"
+        ? MEMBERS_TITLE
+        : route === "notfound"
+          ? NOTFOUND_TITLE
+          : HOME_TITLE;
+    if (route === "members" || route === "notfound") {
       window.scrollTo(0, 0);
     } else {
       const h = window.location.hash;
@@ -203,10 +212,11 @@ export default function App() {
       const a = e.target.closest ? e.target.closest("a[href]") : null;
       if (!a) return;
       const href = a.getAttribute("href");
-      const onMembers = getRoute() === "members";
+      const current = getRoute();
+      const offHome = current !== "home";
       if (href === "/members" || href === "/members/") {
         e.preventDefault();
-        if (!onMembers) {
+        if (current !== "members") {
           window.history.pushState({}, "", "/members");
           setRoute("members");
         } else {
@@ -214,12 +224,19 @@ export default function App() {
         }
         return;
       }
-      if ((href === "/" || (href && href.startsWith("/#"))) && onMembers) {
+      if (href === "/") {
+        if (offHome) {
+          e.preventDefault();
+          goHome("#top");
+        }
+        return;
+      }
+      if ((href && href.startsWith("/#")) && offHome) {
         e.preventDefault();
         goHome(href === "/" ? "#top" : href.slice(1));
         return;
       }
-      if (href && href.startsWith("#") && onMembers) {
+      if (href && href.startsWith("#") && offHome) {
         e.preventDefault();
         goHome(href);
       }
@@ -266,6 +283,8 @@ export default function App() {
 
       {route === "members" ? (
         <MembersPage />
+      ) : route === "notfound" ? (
+        <NotFoundPage path={typeof window !== "undefined" ? window.location.pathname : "/"} />
       ) : (
       <>
       {/* HERO */}

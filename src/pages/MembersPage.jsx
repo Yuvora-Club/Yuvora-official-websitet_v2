@@ -25,7 +25,7 @@ const MEMBERS = [
   },
   {
     id: 5,
-    name: "Yojit Gopani",
+    name: "Yojit Gopagoni",
     role: "Co-Leader",
     email: "yojitgd7@gmail.com",
   },
