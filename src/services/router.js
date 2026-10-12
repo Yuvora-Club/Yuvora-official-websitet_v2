@@ -14,6 +14,9 @@ export function parseRoute() {
   const seg = path.split("/").filter(Boolean);
   if (seg.length === 0) return { name: "home", param: null };
   if (seg[0] === "members") return { name: "members", param: null };
+  if (seg[0] === "join") return { name: "join", param: null };
+  if (seg[0] === "terms") return { name: "terms", param: null };
+  if (seg[0] === "privacy") return { name: "privacy", param: null };
   if (seg[0] === "events" && seg.length === 1) return { name: "events", param: null };
   if (seg[0] === "events" && seg.length === 2) return { name: "eventDetail", param: decodeURIComponent(seg[1]) };
   if (seg[0] === "login") return { name: "login", param: url.searchParams.get("next") || null };
@@ -31,12 +34,15 @@ export function isInternalAppPath(href) {
   const clean = href.split("?")[0].replace(/\/+$/, "") || "/";
   const first = clean.split("/").filter(Boolean)[0];
   if (!first) return true; // "/"
-  return ["members", "events", "login", "register", "apply", "my-events", "pass", "check-in"].includes(first);
+  return ["members", "join", "terms", "privacy", "events", "login", "register", "apply", "my-events", "pass", "check-in"].includes(first);
 }
 
 export const TITLES = {
   home: "Yuvora — Student-Led Club | Play. Build. Gather.",
   members: "Members — Yuvora | Meet the crew",
+  join: "Join Us — Yuvora | Grow with the grove",
+  terms: "Terms & Conditions — Yuvora",
+  privacy: "Privacy Policy — Yuvora",
   events: "Events — Yuvora | Play. Build. Gather.",
   eventDetail: "Event — Yuvora",
   login: "Sign in — Yuvora",

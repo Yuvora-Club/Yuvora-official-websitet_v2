@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import MembersPage from "./pages/MembersPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
+import JoinPage from "./pages/JoinPage.jsx";
+import { TermsPage, PrivacyPage } from "./pages/LegalPages.jsx";
 
 const HOME_TITLE = "Yuvora — Student-Led Club | Play. Build. Gather.";
 const MEMBERS_TITLE = "Members — Yuvora | Meet the crew";
+const JOIN_TITLE = "Join Us — Yuvora | Grow with the grove";
+const TERMS_TITLE = "Terms & Conditions — Yuvora";
+const PRIVACY_TITLE = "Privacy Policy — Yuvora";
 const NOTFOUND_TITLE = "404 — Wandered off the trail · Yuvora";
 
 function getRoute() {
@@ -11,6 +16,9 @@ function getRoute() {
   if (window.location.hash === "#/members") return "members";
   const path = (window.location.pathname || "/").replace(/\/+$/, "") || "/";
   if (path === "/members") return "members";
+  if (path === "/join") return "join";
+  if (path === "/terms") return "terms";
+  if (path === "/privacy") return "privacy";
   if (path === "/") return "home";
   return "notfound";
 }
@@ -175,10 +183,16 @@ export default function App() {
     document.title =
       route === "members"
         ? MEMBERS_TITLE
-        : route === "notfound"
-          ? NOTFOUND_TITLE
-          : HOME_TITLE;
-    if (route === "members" || route === "notfound") {
+        : route === "join"
+          ? JOIN_TITLE
+          : route === "terms"
+            ? TERMS_TITLE
+            : route === "privacy"
+              ? PRIVACY_TITLE
+              : route === "notfound"
+                ? NOTFOUND_TITLE
+                : HOME_TITLE;
+    if (route === "members" || route === "join" || route === "terms" || route === "privacy" || route === "notfound") {
       window.scrollTo(0, 0);
     } else {
       const h = window.location.hash;
@@ -214,11 +228,13 @@ export default function App() {
       const href = a.getAttribute("href");
       const current = getRoute();
       const offHome = current !== "home";
-      if (href === "/members" || href === "/members/") {
+      if (href === "/members" || href === "/members/" || href === "/join" || href === "/join/" || href === "/terms" || href === "/terms/" || href === "/privacy" || href === "/privacy/") {
         e.preventDefault();
-        if (current !== "members") {
-          window.history.pushState({}, "", "/members");
-          setRoute("members");
+        const clean = href.replace(/\/+$/, "") || "/";
+        const target = clean === "/members" ? "members" : clean === "/join" ? "join" : clean === "/terms" ? "terms" : "privacy";
+        if (current !== target) {
+          window.history.pushState({}, "", clean);
+          setRoute(target);
         } else {
           window.scrollTo(0, 0);
         }
@@ -276,13 +292,19 @@ export default function App() {
             <a className="plain" href="#summits">Summits</a>
             <a className="plain" href="#afterdark">After Dark</a>
             <a className={route === "members" ? "plain members-link active" : "plain members-link"} href="/members" aria-current={route === "members" ? "page" : undefined}>Members</a>
-            <a className="btn btn-ink btn-tilt" href="#join">Get Pass →</a>
+            <a className="btn btn-ink btn-tilt" href="/join" aria-current={route === "join" ? "page" : undefined}>Join Us →</a>
           </div>
         </div>
       </nav>
 
       {route === "members" ? (
         <MembersPage />
+      ) : route === "join" ? (
+        <JoinPage />
+      ) : route === "terms" ? (
+        <TermsPage />
+      ) : route === "privacy" ? (
+        <PrivacyPage />
       ) : route === "notfound" ? (
         <NotFoundPage path={typeof window !== "undefined" ? window.location.pathname : "/"} />
       ) : (
@@ -430,7 +452,6 @@ export default function App() {
                 <p className="sport-note">{s.note}<br /><em>↳ {s.whisper}</em></p>
                 <div className="fee-row">
                   <span>entry ≈ ₹50–100 / head</span>
-                  <a href="#join">Join →</a>
                 </div>
               </div>
             </article>
@@ -683,6 +704,7 @@ export default function App() {
             </div>
             <div>
               <h5>Crew</h5>
+              <a href="/join">Join Us</a>
               <a href="#join">Get seed pass</a>
               <a href="#money">Soil & water</a>
               <a href="#faq">FAQ</a>
