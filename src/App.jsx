@@ -1,4 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
+import MembersPage from "./pages/MembersPage.jsx";
+
+const HOME_TITLE = "Yuvora — Student-Led Club | Play. Build. Gather.";
+const MEMBERS_TITLE = "Members — Yuvora | Meet the crew";
+
+function getRoute() {
+  if (typeof window === "undefined") return "home";
+  const path = (window.location.pathname || "/").replace(/\/+$/, "") || "/";
+  if (path === "/members" || window.location.hash === "#/members") return "members";
+  return "home";
+}
 
 const SPORTS = [
   {
@@ -98,7 +109,7 @@ const FAQS = [
   },
 ];
 
-function useReveal() {
+function useReveal(dep) {
   useEffect(() => {
     const els = document.querySelectorAll(".reveal");
     const io = new IntersectionObserver(
@@ -107,7 +118,7 @@ function useReveal() {
     );
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, []);
+  }, [dep]);
 }
 
 function Ticker() {
@@ -139,11 +150,83 @@ function Ticker() {
 }
 
 export default function App() {
-  useReveal();
+  const [route, setRoute] = useState(getRoute);
+  useReveal(route);
   const [vibe, setVibe] = useState("Builder");
   const [name, setName] = useState("");
   const [wing, setWing] = useState("Build grove");
   const [openFaq, setOpenFaq] = useState(0);
+
+  useEffect(() => {
+    const sync = () => setRoute(getRoute());
+    window.addEventListener("popstate", sync);
+    window.addEventListener("hashchange", sync);
+    return () => {
+      window.removeEventListener("popstate", sync);
+      window.removeEventListener("hashchange", sync);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.title = route === "members" ? MEMBERS_TITLE : HOME_TITLE;
+    if (route === "members") {
+      window.scrollTo(0, 0);
+    } else {
+      const h = window.location.hash;
+      if (h && h !== "#/members") {
+        const el = document.querySelector(h);
+        if (el) {
+          requestAnimationFrame(() => el.scrollIntoView());
+          return;
+        }
+      }
+      if (!h || h === "#top") window.scrollTo(0, 0);
+    }
+  }, [route]);
+
+  // Minimal SPA navigation without adding a router dependency. Only the
+  // club's own links are intercepted — external links (mailto, instagram,
+  // hackclub) keep their default behavior.
+  useEffect(() => {
+    const goHome = (hash) => {
+      window.history.pushState({}, "", hash && hash !== "#top" ? `/${hash}` : "/");
+      setRoute("home");
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (!hash || hash === "#top") window.scrollTo(0, 0);
+          else document.querySelector(hash)?.scrollIntoView();
+        })
+      );
+    };
+    const onClick = (e) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const a = e.target.closest ? e.target.closest("a[href]") : null;
+      if (!a) return;
+      const href = a.getAttribute("href");
+      const onMembers = getRoute() === "members";
+      if (href === "/members" || href === "/members/") {
+        e.preventDefault();
+        if (!onMembers) {
+          window.history.pushState({}, "", "/members");
+          setRoute("members");
+        } else {
+          window.scrollTo(0, 0);
+        }
+        return;
+      }
+      if ((href === "/" || (href && href.startsWith("/#"))) && onMembers) {
+        e.preventDefault();
+        goHome(href === "/" ? "#top" : href.slice(1));
+        return;
+      }
+      if (href && href.startsWith("#") && onMembers) {
+        e.preventDefault();
+        goHome(href);
+      }
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
 
   const memberId = useMemo(() => {
     const base = (name || "yuvora").toLowerCase().replace(/[^a-z]/g, "") || "yuvora";
@@ -175,11 +258,16 @@ export default function App() {
             <a className="plain" href="#build">Build</a>
             <a className="plain" href="#summits">Summits</a>
             <a className="plain" href="#afterdark">After Dark</a>
+            <a className={route === "members" ? "plain members-link active" : "plain members-link"} href="/members" aria-current={route === "members" ? "page" : undefined}>Members</a>
             <a className="btn btn-ink btn-tilt" href="#join">Get Pass →</a>
           </div>
         </div>
       </nav>
 
+      {route === "members" ? (
+        <MembersPage />
+      ) : (
+      <>
       {/* HERO */}
       <header className="hero" id="top">
         <div>
@@ -554,6 +642,8 @@ export default function App() {
           ))}
         </div>
       </section>
+      </>
+      )}
 
       <footer>
         <div className="foot-inner">
