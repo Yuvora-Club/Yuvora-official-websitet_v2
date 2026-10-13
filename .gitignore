@@ -13,9 +13,6 @@ dist-ssr
 *.local
 .env
 
-# Nested backend repo (separate repo: Yuvora_Backend). Never track here.
-Backend/
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
