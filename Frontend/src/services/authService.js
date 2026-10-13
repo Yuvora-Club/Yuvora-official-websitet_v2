@@ -104,14 +104,19 @@ export function getLiveSession() {
   return readJSON(LIVE_SESSION_KEY, null);
 }
 
-// Backend profile -> frontend public user shape ({ id, name, email, phone }).
+// Backend profile -> frontend public user shape. Keeps everything the Join
+// form collected (except the password, which never leaves Firebase Auth).
 function toPublicUser(u) {
   if (!u) return null;
   return {
     id: u.id || u.uid,
     name: u.fullName || u.name || "",
+    fullName: u.fullName || u.name || "",
     email: u.email || "",
+    altEmail: u.altEmail || null,
     phone: u.phone || "",
+    age: u.age ?? null,
+    termsAcceptedAt: u.termsAcceptedAt,
     createdAt: u.createdAt,
   };
 }

@@ -92,6 +92,38 @@ export default function DashboardPage() {
               </span>
             </div>
           </div>
+
+          <div className="join-card" style={{ marginTop: 18 }}>
+            <h3>Your details 🌱</h3>
+            <p className="join-sub">
+              Exactly what you gave us when you joined — password never shown,
+              never stored here.
+            </p>
+            <dl className="dash-facts">
+              <div>
+                <dt>Full name</dt>
+                <dd>{user.fullName || user.name || "—"}</dd>
+              </div>
+              <div>
+                <dt>Email</dt>
+                <dd>{user.email || "—"}</dd>
+              </div>
+              {user.altEmail ? (
+                <div>
+                  <dt>Alternate email</dt>
+                  <dd>{user.altEmail}</dd>
+                </div>
+              ) : null}
+              <div>
+                <dt>Phone</dt>
+                <dd>{user.phone || "—"}</dd>
+              </div>
+              <div>
+                <dt>Age</dt>
+                <dd>{user.age ?? "—"}</dd>
+              </div>
+            </dl>
+          </div>
         </div>
       </div>
     </section>
