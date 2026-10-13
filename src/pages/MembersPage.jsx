@@ -7,7 +7,7 @@ const MEMBERS = [
   },
   {
     id: 2,
-    name: "Adarsh Kumar Darsh",
+    name: "Adarsh Kumar Dash",
     role: "Co-Leader",
     email: "adarsh.dps.2020@gmail.com",
   },
