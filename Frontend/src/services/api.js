@@ -12,8 +12,20 @@
 //   import { API_BASE_URL, apiUrl, apiFetch } from "./api.js";
 //   const { events } = await apiFetch("/api/events");
 
+const PROD_API_URL = "https://yuvora-backend.onrender.com";
+
+function defaultApiUrl() {
+  // If the production build forgot to bake VITE_API_URL (e.g. the Pages
+  // variable was empty), still point the live domain at the live backend
+  // instead of localhost — otherwise every login/join fetch fails.
+  if (typeof window !== "undefined" && window.location?.hostname?.endsWith("yuvora.org")) {
+    return PROD_API_URL;
+  }
+  return "http://localhost:4000";
+}
+
 export const API_BASE_URL = (
-  import.meta.env.VITE_API_URL || "http://localhost:4000"
+  import.meta.env.VITE_API_URL || defaultApiUrl()
 ).replace(/\/+$/, "");
 
 /** Join the base URL with an `/api/...` path. */

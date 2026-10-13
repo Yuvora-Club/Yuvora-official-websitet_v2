@@ -37,8 +37,9 @@ jobs:
         run: npm run build
         env:
           # Baked into the bundle at build time (static hosting has no runtime env).
-          # Set the value under repo Settings → Secrets and variables → Actions → Variables.
-          VITE_API_URL: ${{ vars.VITE_API_URL }}
+          # Falls back to the Render backend so an unset Pages variable can
+          # never bake an empty/localhost URL into the live yuvora.org bundle.
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://yuvora-backend.onrender.com' }}
       - name: Add SPA fallback so /members loads directly
         run: cp dist/index.html dist/404.html
       - name: Upload artifact
