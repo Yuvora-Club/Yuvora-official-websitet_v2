@@ -4,6 +4,8 @@
 
 import { useState } from "react";
 import { apiFetch } from "../services/api.js";
+import { saveLiveSession } from "../services/authService.js";
+import { navigate } from "../services/router.js";
 
 function FieldErr({ message }) {
   if (!message) return null;
@@ -56,20 +58,17 @@ export default function JoinPage() {
       setBusy(false);
       if (data && data.ok) {
         setJoined(data.user);
+        // Sign straight in so the dashboard greets the new member.
+        saveLiveSession(data.user, data.customToken);
         try {
           window.localStorage.setItem(
             "yuvora.v1.joined",
             JSON.stringify({ user: data.user, at: new Date().toISOString() })
           );
-          if (data.customToken) {
-            window.localStorage.setItem(
-              "yuvora.v1.customToken",
-              data.customToken
-            );
-          }
         } catch {
-          /* storage blocked — success state still shows */
+          /* storage blocked — dashboard still opens */
         }
+        setTimeout(() => navigate("/dashboard"), 900);
         return;
       }
       setFormError("Unexpected response from the server. Please try again.");
@@ -114,8 +113,8 @@ export default function JoinPage() {
           <div className="join-card" role="status">
             <h3>Application received 🌱</h3>
             <p className="join-sub">
-              Your account was created on the live backend. Come say hi at the
-              next Play · Build · Gather meetup to get your seed pass.
+              Your account was created on the live backend. Opening your
+              dashboard…
             </p>
             <div className="join-actions">
               <a className="btn btn-clay" href="/events">

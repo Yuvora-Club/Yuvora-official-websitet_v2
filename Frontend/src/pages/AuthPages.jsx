@@ -36,7 +36,7 @@ function PasswordField({ id, label, value, onChange, error, describedBy }) {
 }
 
 function nextPath(next) {
-  return next && next.startsWith("/") ? next : "/events";
+  return next && next.startsWith("/") ? next : "/dashboard";
 }
 
 export function LoginPage({ next }) {

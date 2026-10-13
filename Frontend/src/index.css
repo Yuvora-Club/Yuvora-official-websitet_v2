@@ -982,6 +982,17 @@ footer::before {
 .join-error { color: #9a5233; background: #fbeedf; border: 1.5px solid #e9c2ad; border-radius: 12px; padding: 9px 12px; font-size: 13.5px; font-weight: 700; margin: 10px 0 0; }
 .join-notice { background: var(--mist); border: 1px dashed #9dbf8a; border-radius: 12px; padding: 10px 12px; font-family: var(--mono); font-size: 12.5px; color: var(--moss-deep); line-height: 1.6; margin: 12px 0 0; }
 .join-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.dash-layout { display: grid; grid-template-columns: 240px 1fr; gap: 18px; align-items: start; }
+.dash-side { background: var(--card); border: var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow-sm); padding: 16px; display: grid; gap: 12px; align-content: start; position: sticky; top: 12px; }
+.dash-side nav { display: grid; gap: 8px; }
+.dash-link { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; font-weight: 800; font-size: 14.5px; color: var(--moss-deep); }
+.dash-link:hover { background: var(--mist); }
+.dash-link.active { background: var(--moss-deep); color: #f4efe0; }
+@media (max-width: 860px) {
+  .dash-layout { grid-template-columns: 1fr; }
+  .dash-side { position: static; }
+  .dash-side nav { grid-auto-flow: column; grid-auto-columns: max-content; overflow-x: auto; }
+}
 .ev-linkbtn { background: none; border: none; padding: 0; font: inherit; color: var(--ink); font-weight: 800; text-decoration: underline; cursor: pointer; }
 .ev-linkbtn:disabled { opacity: 0.55; cursor: wait; }
 .join-side { background: #2e332c; color: #f4efe0; border-radius: var(--r-lg); padding: 22px 20px; box-shadow: var(--shadow-sm); }

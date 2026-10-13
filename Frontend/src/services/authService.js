@@ -129,13 +129,7 @@ export async function loginLive({ email, password }) {
       method: "POST",
       body: JSON.stringify({ email: cleanEmail, password }),
     });
-    const user = toPublicUser(data.user);
-    writeJSON(LIVE_SESSION_KEY, {
-      user,
-      idToken: data.idToken || null,
-      at: new Date().toISOString(),
-    });
-    notify(CHANNEL);
+    const user = saveLiveSession(data.user, data.idToken);
     return { ok: true, user };
   } catch (err) {
     const payload = err && err.data;
@@ -143,6 +137,18 @@ export async function loginLive({ email, password }) {
     if (payload && payload.error) return { ok: false, formError: payload.error };
     return { ok: false, formError: "Couldn't reach the login server. Check your connection and try again." };
   }
+}
+
+/** Persist a backend user as the signed-in session (used by login AND join). */
+export function saveLiveSession(backendUser, token) {
+  const user = toPublicUser(backendUser);
+  writeJSON(LIVE_SESSION_KEY, {
+    user,
+    idToken: token || null,
+    at: new Date().toISOString(),
+  });
+  notify(CHANNEL);
+  return user;
 }
 
 /** LIVE password reset — POST /api/auth/reset. Always resolves ok (see backend). */
