@@ -5,6 +5,7 @@ import JoinPage from "./pages/JoinPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import { LoginPage, RegisterPage } from "./pages/AuthPages.jsx";
 import { TermsPage, PrivacyPage } from "./pages/LegalPages.jsx";
+import { useAuth } from "./state/useAuth.js";
 
 const HOME_TITLE = "Yuvora — Student-Led Club | Play. Build. Gather.";
 const MEMBERS_TITLE = "Members — Yuvora | Meet the crew";
@@ -182,6 +183,9 @@ function Ticker() {
 
 export default function App() {
   const [route, setRoute] = useState(getRoute);
+  // Live session (localStorage-backed). Nav shows Dashboard when signed
+  // in, Log in when signed out — so the dashboard is never "lost".
+  const { user } = useAuth();
   useReveal(route);
   const [vibe, setVibe] = useState("Builder");
   const [name, setName] = useState("");
@@ -317,6 +321,11 @@ export default function App() {
             <a className="plain" href="#summits">Summits</a>
             <a className="plain" href="#afterdark">After Dark</a>
             <a className={route === "members" ? "plain members-link active" : "plain members-link"} href="/members" aria-current={route === "members" ? "page" : undefined}>Members</a>
+            {user ? (
+              <a className={route === "dashboard" ? "plain members-link active" : "plain members-link"} href="/dashboard" aria-current={route === "dashboard" ? "page" : undefined}>Dashboard</a>
+            ) : (
+              <a className={route === "login" ? "plain members-link active" : "plain members-link"} href="/login" aria-current={route === "login" ? "page" : undefined}>Log in</a>
+            )}
             <a className="btn btn-ink btn-tilt" href="/join" aria-current={route === "join" ? "page" : undefined}>Join Us →</a>
           </div>
         </div>

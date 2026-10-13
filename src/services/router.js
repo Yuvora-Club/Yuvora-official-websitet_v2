@@ -21,6 +21,7 @@ export function parseRoute() {
   if (seg[0] === "events" && seg.length === 2) return { name: "eventDetail", param: decodeURIComponent(seg[1]) };
   if (seg[0] === "login") return { name: "login", param: url.searchParams.get("next") || null };
   if (seg[0] === "register") return { name: "register", param: url.searchParams.get("next") || null };
+  if (seg[0] === "dashboard") return { name: "dashboard", param: null };
   if (seg[0] === "apply" && seg.length === 2) return { name: "apply", param: decodeURIComponent(seg[1]) };
   if (seg[0] === "my-events") return { name: "myevents", param: null };
   if (seg[0] === "pass" && seg.length === 2) return { name: "pass", param: decodeURIComponent(seg[1]) };
@@ -34,7 +35,7 @@ export function isInternalAppPath(href) {
   const clean = href.split("?")[0].replace(/\/+$/, "") || "/";
   const first = clean.split("/").filter(Boolean)[0];
   if (!first) return true; // "/"
-  return ["members", "join", "terms", "privacy", "events", "login", "register", "apply", "my-events", "pass", "check-in"].includes(first);
+  return ["members", "join", "dashboard", "terms", "privacy", "events", "login", "register", "apply", "my-events", "pass", "check-in"].includes(first);
 }
 
 export const TITLES = {
@@ -47,6 +48,7 @@ export const TITLES = {
   eventDetail: "Event — Yuvora",
   login: "Sign in — Yuvora",
   register: "Create account — Yuvora",
+  dashboard: "Dashboard — Yuvora | Your grove",
   apply: "Apply for event — Yuvora",
   myevents: "My Events — Yuvora",
   pass: "Seed Pass — Yuvora",
