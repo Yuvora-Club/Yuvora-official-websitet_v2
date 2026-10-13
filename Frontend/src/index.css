@@ -982,6 +982,8 @@ footer::before {
 .join-error { color: #9a5233; background: #fbeedf; border: 1.5px solid #e9c2ad; border-radius: 12px; padding: 9px 12px; font-size: 13.5px; font-weight: 700; margin: 10px 0 0; }
 .join-notice { background: var(--mist); border: 1px dashed #9dbf8a; border-radius: 12px; padding: 10px 12px; font-family: var(--mono); font-size: 12.5px; color: var(--moss-deep); line-height: 1.6; margin: 12px 0 0; }
 .join-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.ev-linkbtn { background: none; border: none; padding: 0; font: inherit; color: var(--ink); font-weight: 800; text-decoration: underline; cursor: pointer; }
+.ev-linkbtn:disabled { opacity: 0.55; cursor: wait; }
 .join-side { background: #2e332c; color: #f4efe0; border-radius: var(--r-lg); padding: 22px 20px; box-shadow: var(--shadow-sm); }
 .join-side h3 { font-family: var(--display); margin: 0 0 8px; font-size: 22px; }
 .join-side ol { margin: 0; padding-left: 20px; line-height: 1.7; font-size: 14.5px; color: #cfd6bd; font-weight: 500; }

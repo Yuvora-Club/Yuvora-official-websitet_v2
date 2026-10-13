@@ -2,11 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import MembersPage from "./pages/MembersPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 import JoinPage from "./pages/JoinPage.jsx";
+import { LoginPage, RegisterPage } from "./pages/AuthPages.jsx";
 import { TermsPage, PrivacyPage } from "./pages/LegalPages.jsx";
 
 const HOME_TITLE = "Yuvora — Student-Led Club | Play. Build. Gather.";
 const MEMBERS_TITLE = "Members — Yuvora | Meet the crew";
 const JOIN_TITLE = "Join Us — Yuvora | Grow with the grove";
+const LOGIN_TITLE = "Log in — Yuvora";
+const REGISTER_TITLE = "Create account — Yuvora";
 const TERMS_TITLE = "Terms & Conditions — Yuvora";
 const PRIVACY_TITLE = "Privacy Policy — Yuvora";
 const NOTFOUND_TITLE = "404 — Wandered off the trail · Yuvora";
@@ -17,10 +20,23 @@ function getRoute() {
   const path = (window.location.pathname || "/").replace(/\/+$/, "") || "/";
   if (path === "/members") return "members";
   if (path === "/join") return "join";
+  if (path === "/login") return "login";
+  if (path === "/register") return "register";
   if (path === "/terms") return "terms";
   if (path === "/privacy") return "privacy";
   if (path === "/") return "home";
   return "notfound";
+}
+
+// `?next=/where-to-go-after` passthrough for login/register.
+function getNext() {
+  if (typeof window === "undefined") return null;
+  try {
+    const n = new URL(window.location.href).searchParams.get("next");
+    return n && n.startsWith("/") ? n : null;
+  } catch {
+    return null;
+  }
 }
 
 const SPORTS = [
@@ -185,14 +201,18 @@ export default function App() {
         ? MEMBERS_TITLE
         : route === "join"
           ? JOIN_TITLE
-          : route === "terms"
-            ? TERMS_TITLE
-            : route === "privacy"
-              ? PRIVACY_TITLE
-              : route === "notfound"
-                ? NOTFOUND_TITLE
-                : HOME_TITLE;
-    if (route === "members" || route === "join" || route === "terms" || route === "privacy" || route === "notfound") {
+          : route === "login"
+            ? LOGIN_TITLE
+            : route === "register"
+              ? REGISTER_TITLE
+              : route === "terms"
+                ? TERMS_TITLE
+                : route === "privacy"
+                  ? PRIVACY_TITLE
+                  : route === "notfound"
+                    ? NOTFOUND_TITLE
+                    : HOME_TITLE;
+    if (route === "members" || route === "join" || route === "login" || route === "register" || route === "terms" || route === "privacy" || route === "notfound") {
       window.scrollTo(0, 0);
     } else {
       const h = window.location.hash;
@@ -228,12 +248,12 @@ export default function App() {
       const href = a.getAttribute("href");
       const current = getRoute();
       const offHome = current !== "home";
-      if (href === "/members" || href === "/members/" || href === "/join" || href === "/join/" || href === "/terms" || href === "/terms/" || href === "/privacy" || href === "/privacy/") {
+      const pathOnly = href ? href.split("?")[0].replace(/\/+$/, "") || "/" : "";
+      if (pathOnly === "/members" || pathOnly === "/join" || pathOnly === "/login" || pathOnly === "/register" || pathOnly === "/terms" || pathOnly === "/privacy") {
         e.preventDefault();
-        const clean = href.replace(/\/+$/, "") || "/";
-        const target = clean === "/members" ? "members" : clean === "/join" ? "join" : clean === "/terms" ? "terms" : "privacy";
+        const target = pathOnly === "/members" ? "members" : pathOnly === "/join" ? "join" : pathOnly === "/login" ? "login" : pathOnly === "/register" ? "register" : pathOnly === "/terms" ? "terms" : "privacy";
         if (current !== target) {
-          window.history.pushState({}, "", clean);
+          window.history.pushState({}, "", href);
           setRoute(target);
         } else {
           window.scrollTo(0, 0);
@@ -301,6 +321,10 @@ export default function App() {
         <MembersPage />
       ) : route === "join" ? (
         <JoinPage />
+      ) : route === "login" ? (
+        <LoginPage next={getNext()} />
+      ) : route === "register" ? (
+        <RegisterPage next={getNext()} />
       ) : route === "terms" ? (
         <TermsPage />
       ) : route === "privacy" ? (

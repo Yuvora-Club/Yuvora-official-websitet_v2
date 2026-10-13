@@ -286,6 +286,9 @@ export default function JoinPage() {
               ← Back to sunlight
             </a>
           </div>
+          <p className="ev-switch">
+            Already growing here? <a href="/login">Log in →</a>
+          </p>
         </form>
 
         <aside className="join-side">

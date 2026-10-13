@@ -1,8 +1,7 @@
-// Registration + sign-in UI in the Yuvora theme. MOCK backend: demo accounts
-// live in this browser only — the pages say so on screen, every time.
+// Sign-in (LIVE backend) + demo registration UI in the Yuvora theme.
 
 import { useState } from "react";
-import { AUTH_MODE_NOTICE, login, register } from "../services/authService.js";
+import { AUTH_MODE_NOTICE, loginLive, register, requestPasswordReset } from "../services/authService.js";
 import { navigate } from "../services/router.js";
 import { DemoNotice, FieldError } from "../components/eventBits.jsx";
 
@@ -45,18 +44,21 @@ export function LoginPage({ next }) {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
+  const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
   async function onSubmit(e) {
     e.preventDefault();
     setFormError("");
+    setInfo("");
     setBusy(true);
-    const res = await login({ email, password });
+    // LIVE: checks the real account created via Join (POST /api/auth/login).
+    const res = await loginLive({ email, password });
     setBusy(false);
     if (!res.ok) {
       setErrors(res.errors || {});
-      setFormError("Could not sign you in — check the fields below.");
+      setFormError(res.formError || "Email or password is wrong.");
       return;
     }
     setErrors({});
@@ -64,21 +66,40 @@ export function LoginPage({ next }) {
     setTimeout(() => navigate(nextPath(next)), 650);
   }
 
+  async function onForgotPassword() {
+    setFormError("");
+    setInfo("");
+    if (!email.trim()) {
+      setErrors({ email: "Type your email first, then tap Forgot password." });
+      return;
+    }
+    setBusy(true);
+    const res = await requestPasswordReset(email);
+    setBusy(false);
+    if (!res.ok) {
+      setErrors(res.errors || {});
+      setFormError(res.formError || "Couldn't send the reset link. Check the email address.");
+      return;
+    }
+    setErrors({});
+    setInfo("Reset link sent. Check your inbox.");
+  }
+
   return (
     <section className="wrap members-page">
       <div className="sec-head reveal in">
         <span className="sec-no">❧ 11 — account</span>
         <h2>
-          Sign <em>in</em>
+          Welcome <em>back</em>
         </h2>
         <p>
-          Welcome back to the grove. <b>Demo accounts never leave this browser.</b>
+          Log in to see your member pass. Works with the account you created via <b>Join</b>.
         </p>
       </div>
-      <DemoNotice text={AUTH_MODE_NOTICE} />
       <form className="ev-form reveal in" onSubmit={onSubmit} noValidate>
         {formError && <p className="ev-formerror" role="alert">{formError}</p>}
-        {done && <p className="ev-success" role="status">Signed in (demo) — taking you back…</p>}
+        {info && <p className="ev-success" role="status">{info}</p>}
+        {done && <p className="ev-success" role="status">Signed in — taking you back…</p>}
         <label className="field" htmlFor="login-email">
           Email address
           <input
@@ -95,10 +116,15 @@ export function LoginPage({ next }) {
         </label>
         <PasswordField id="login-password" label="Password" value={password} onChange={setPassword} error={errors.password} describedBy="login-password-err" />
         <button className="btn btn-clay" type="submit" disabled={busy}>
-          {busy ? "Checking… (demo)" : "Sign in →"}
+          {busy ? "Logging in…" : "Log in →"}
         </button>
         <p className="ev-switch">
-          New to the grove? <a href={`/register${next ? `?next=${encodeURIComponent(next)}` : ""}`}>Create an account →</a>
+          <button type="button" className="ev-linkbtn" onClick={onForgotPassword} disabled={busy}>
+            Forgot password?
+          </button>
+        </p>
+        <p className="ev-switch">
+          New here? <a href={`/join${next ? `?next=${encodeURIComponent(next)}` : ""}`}>Join Yuvora →</a>
         </p>
       </form>
     </section>

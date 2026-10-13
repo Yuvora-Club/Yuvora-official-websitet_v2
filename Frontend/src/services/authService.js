@@ -14,9 +14,13 @@
 // keep these exact function names + return shapes so no component changes.
 
 import { notify, readJSON, removeKey, subscribeTo, snapshotOf, writeJSON } from "./store.js";
+import { apiFetch } from "./api.js";
 
 const USERS_KEY = "yuvora.v1.mock.users";
 const SESSION_KEY = "yuvora.v1.mock.session";
+// Live backend session (POST /api/auth/login). Separate key so demo and
+// real accounts never mix.
+const LIVE_SESSION_KEY = "yuvora.v1.live-session";
 const CHANNEL = "auth";
 
 export const AUTH_MODE = "mock";
@@ -85,12 +89,76 @@ function setSession(userId) {
   notify(CHANNEL);
 }
 
-/** Currently signed-in user (public fields only), or null. MOCK. */
+/** Currently signed-in user: live backend account first, else demo account, else null. */
 export function getSessionUser() {
+  const live = readJSON(LIVE_SESSION_KEY, null);
+  if (live && live.user && live.user.id) return live.user;
   const session = readJSON(SESSION_KEY, null);
   if (!session || !session.userId) return null;
   const record = loadUsers().find((u) => u.id === session.userId);
   return publicUser(record) || null;
+}
+
+/** Stored live session ({ user, idToken }) or null. */
+export function getLiveSession() {
+  return readJSON(LIVE_SESSION_KEY, null);
+}
+
+// Backend profile -> frontend public user shape ({ id, name, email, phone }).
+function toPublicUser(u) {
+  if (!u) return null;
+  return {
+    id: u.id || u.uid,
+    name: u.fullName || u.name || "",
+    email: u.email || "",
+    phone: u.phone || "",
+    createdAt: u.createdAt,
+  };
+}
+
+/**
+ * LIVE login — verifies email + password against the backend
+ * (POST /api/auth/login, Firebase-checked). Resolves { ok, user } or
+ * { ok:false, errors|formError }. Throws nothing; network failures come
+ * back as { ok:false, formError }.
+ */
+export async function loginLive({ email, password }) {
+  const cleanEmail = (email || "").trim().toLowerCase();
+  try {
+    const data = await apiFetch("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email: cleanEmail, password }),
+    });
+    const user = toPublicUser(data.user);
+    writeJSON(LIVE_SESSION_KEY, {
+      user,
+      idToken: data.idToken || null,
+      at: new Date().toISOString(),
+    });
+    notify(CHANNEL);
+    return { ok: true, user };
+  } catch (err) {
+    const payload = err && err.data;
+    if (payload && payload.errors) return { ok: false, errors: payload.errors };
+    if (payload && payload.error) return { ok: false, formError: payload.error };
+    return { ok: false, formError: "Couldn't reach the login server. Check your connection and try again." };
+  }
+}
+
+/** LIVE password reset — POST /api/auth/reset. Always resolves ok (see backend). */
+export async function requestPasswordReset(email) {
+  try {
+    await apiFetch("/api/auth/reset", {
+      method: "POST",
+      body: JSON.stringify({ email: (email || "").trim() }),
+    });
+    return { ok: true };
+  } catch (err) {
+    const payload = err && err.data;
+    if (payload && payload.errors) return { ok: false, errors: payload.errors };
+    if (payload && payload.error) return { ok: false, formError: payload.error };
+    return { ok: false, formError: "Couldn't reach the server. Check your connection and try again." };
+  }
 }
 
 export function validateRegistration({ name, email, phone, password, confirm }) {
@@ -159,7 +227,9 @@ export async function login({ email, password }) {
   return { ok: true, user: publicUser(record), mock: true };
 }
 
-/** MOCK logout. */
+/** Logout — clears live and demo sessions. */
 export function logout() {
   setSession(null);
+  removeKey(LIVE_SESSION_KEY);
+  notify(CHANNEL);
 }

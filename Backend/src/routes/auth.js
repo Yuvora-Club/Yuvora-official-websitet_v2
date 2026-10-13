@@ -106,4 +106,111 @@ router.post("/register", async (req, res) => {
   }
 });
 
+function webApiKey() {
+  return String(process.env.FIREBASE_WEB_API_KEY || "").trim();
+}
+
+function keyMissing(res) {
+  return res.status(503).json({
+    ok: false,
+    error:
+      "Password login is not configured on the backend yet. Add FIREBASE_WEB_API_KEY (Firebase Console > Project settings > General > Web API Key) to Backend/.env and to the Render dashboard, then restart/redeploy.",
+  });
+}
+
+// POST /api/auth/login — sign in with an account created via /register.
+// Body: { email, password } -> { user, idToken } | 400/401/429
+// Verifies the password via the Firebase Auth REST API (Admin SDK cannot
+// check passwords), then returns the RTDB profile + ID token.
+router.post("/login", async (req, res) => {
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  const password = String(req.body?.password ?? "");
+  const errors = {};
+  if (!EMAIL_RE.test(email)) errors.email = "Enter a valid email address.";
+  if (!password) errors.password = "Enter your password.";
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({ ok: false, errors });
+  }
+
+  if (!isFirebaseReady()) {
+    return res.status(503).json({
+      ok: false,
+      error: "Firebase is not configured on the backend yet. Set FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY / FIREBASE_DATABASE_URL in Backend/.env.",
+    });
+  }
+  const key = webApiKey();
+  if (!key) return keyMissing(res);
+
+  try {
+    const r = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${key}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, returnSecureToken: true }),
+      }
+    );
+    const data = await r.json().catch(() => null);
+    if (!r.ok) {
+      const msg = String(data?.error?.message || "");
+      if (
+        msg.includes("INVALID_LOGIN_CREDENTIALS") ||
+        msg.includes("INVALID_PASSWORD") ||
+        msg.includes("EMAIL_NOT_FOUND")
+      ) {
+        return res.status(401).json({ ok: false, errors: { email: "Email or password is wrong." } });
+      }
+      if (msg.includes("TOO_MANY_ATTEMPTS_TRY_LATER")) {
+        return res.status(429).json({ ok: false, error: "Too many attempts. Try again in a few minutes." });
+      }
+      if (msg.includes("USER_DISABLED")) {
+        return res.status(403).json({ ok: false, error: "This account has been disabled. Contact the crew." });
+      }
+      return res.status(400).json({ ok: false, error: "Couldn't log you in. Try again." });
+    }
+
+    const uid = data.localId;
+    let profile = null;
+    try {
+      const snap = await rtdb().ref(`users/${uid}`).get();
+      profile = snap.val() || null;
+    } catch {
+      /* profile optional — auth already succeeded */
+    }
+    return res.json({
+      ok: true,
+      user: { id: uid, uid, ...(profile || {}), email: (profile && profile.email) || data.email || email },
+      idToken: data.idToken,
+    });
+  } catch (err) {
+    console.error("POST /api/auth/login failed:", err?.code || err?.message || err);
+    return res.status(500).json({ ok: false, error: "Couldn't log you in. Try again." });
+  }
+});
+
+// POST /api/auth/reset — send a Firebase password-reset email.
+// Body: { email } -> { ok: true } (always ok to avoid leaking which emails exist).
+router.post("/reset", async (req, res) => {
+  const email = String(req.body?.email ?? "").trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) {
+    return res.status(400).json({ ok: false, errors: { email: "Enter a valid email address." } });
+  }
+  const key = webApiKey();
+  if (!key) return keyMissing(res);
+  try {
+    await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${key}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestType: "PASSWORD_RESET", email }),
+      }
+    );
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error("POST /api/auth/reset failed:", err?.code || err?.message || err);
+    return res.status(500).json({ ok: false, error: "Couldn't send the reset link. Try again." });
+  }
+});
+
 export default router;

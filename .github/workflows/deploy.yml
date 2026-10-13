@@ -18,6 +18,10 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        # The live Vite app lives in Frontend/ (root-level src/ is stale).
+        working-directory: Frontend
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,16 +30,21 @@ jobs:
         with:
           node-version: 22
           cache: npm
+          cache-dependency-path: Frontend/package-lock.json
       - name: Install dependencies
         run: npm ci
       - name: Build
         run: npm run build
+        env:
+          # Baked into the bundle at build time (static hosting has no runtime env).
+          # Set the value under repo Settings → Secrets and variables → Actions → Variables.
+          VITE_API_URL: ${{ vars.VITE_API_URL }}
       - name: Add SPA fallback so /members loads directly
         run: cp dist/index.html dist/404.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./dist
+          path: Frontend/dist
 
   deploy:
     environment:
