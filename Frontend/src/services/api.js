@@ -1,0 +1,56 @@
+// YUVORA — central API config for Vite.
+//
+// Reads the backend URL from Vite env:
+//   VITE_API_URL  (e.g. http://localhost:4000 locally,
+//                   https://yuvora-backend.onrender.com in production)
+//
+// Files:
+//   Frontend/.env.development  -> VITE_API_URL=http://localhost:4000
+//   Frontend/.env.production   -> VITE_API_URL=https://yuvora-backend.onrender.com
+//
+// Usage:
+//   import { API_BASE_URL, apiUrl, apiFetch } from "./api.js";
+//   const { events } = await apiFetch("/api/events");
+
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_URL || "http://localhost:4000"
+).replace(/\/+$/, "");
+
+/** Join the base URL with an `/api/...` path. */
+export function apiUrl(path = "/") {
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${API_BASE_URL}${p}`;
+}
+
+/**
+ * fetch() wrapper that prefixes `/api/...` paths with the base URL
+ * and always sends/accepts JSON. Throws on network error;
+ * returns parsed JSON (or text) — caller checks `res.ok` / payload.
+ */
+export async function apiFetch(path, options = {}) {
+  const url = /^https?:\/\//i.test(path) ? path : apiUrl(path);
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      Accept: "application/json",
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...(options.headers || {}),
+    },
+  });
+  const text = await res.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = text;
+  }
+  if (!res.ok) {
+    const err = new Error(
+      (data && data.error) || `Request failed (${res.status})`
+    );
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}

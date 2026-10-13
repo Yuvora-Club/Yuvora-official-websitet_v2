@@ -35,6 +35,11 @@ const MEMBERS = [
     role: "Co-Leader",
     email: "mrgurucharan23@gmail.com",
   },
+  {id:7,
+   name:"Gumireddy Ranadeep Reddy",
+   role:"Co-Leader",
+   email:"granadeepreddy@gmail.com"
+  }
 ];
 
 const AVATAR_BG = [
