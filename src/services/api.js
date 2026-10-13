@@ -4,9 +4,9 @@
 //   VITE_API_URL  (e.g. http://localhost:4000 locally,
 //                   https://yuvora-backend.onrender.com in production)
 //
-// Files:
-//   Frontend/.env.development  -> VITE_API_URL=http://localhost:4000
-//   Frontend/.env.production   -> VITE_API_URL=https://yuvora-backend.onrender.com
+// Files (repo root):
+//   .env.development  -> VITE_API_URL=http://localhost:4000
+//   .env.production   -> VITE_API_URL=https://yuvora-backend.onrender.com
 //
 // Usage:
 //   import { API_BASE_URL, apiUrl, apiFetch } from "./api.js";

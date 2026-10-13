@@ -5,8 +5,8 @@ TWO separate GitHub repos. Never mix them up:
 
 | Local directory | Push to (remote + branch)                | What it is              |
 | --------------- | ---------------------------------------- | ----------------------- |
-| `Frontend/` (+ `.github/`, root files) — i.e. THIS repo root | `https://github.com/Yuvora-Club/Yuvora-official-websitet_v2` (`origin`, branch `main`) | Vite site → GitHub Pages → `https://yuvora.org` |
-| `Backend/` (the nested repo inside this folder) | `https://github.com/Yuvora-Club/Yuvora_Backend` (its own `origin`, branch `main`) | Express API → Render → `https://yuvora-backend.onrender.com` |
+| THIS repo root (`src/`, `public/`, `index.html`, `package.json`, `.github/`) — frontend ONLY | `https://github.com/Yuvora-Club/Yuvora-official-websitet_v2` (`origin`, branch `main`) | Vite site → GitHub Pages → `https://yuvora.org` |
+| `Backend/` (the nested repo inside this folder, ignored by the root repo) | `https://github.com/Yuvora-Club/Yuvora_Backend` (its own `origin`, branch `main`) | Express API → Render → `https://yuvora-backend.onrender.com` |
 
 ## Routine push (both projects)
 
@@ -51,8 +51,11 @@ Set-Location ..
 - NEVER `git add` `node_modules/` or `dist/` (both ignored). If
   `git status` shows them as untracked (`??`), the `.gitignore` is broken
   — fix that before committing.
-- GitHub Pages builds with `working-directory: Frontend`, so the
-  frontend repo must keep the `Frontend/` subfolder layout.
+- The frontend repo root IS the Vite app (`src/`, `public/`,
+  `package.json` at top level). Do NOT reintroduce a `Frontend/`
+  subfolder — the Pages workflow builds from the root.
+- `Backend/` on disk is ignored by the root repo (`Backend/` line in
+  root `.gitignore`). It is pushed only from inside `Backend/`.
 
 ## Env vars (not in git — set on the hosts)
 
