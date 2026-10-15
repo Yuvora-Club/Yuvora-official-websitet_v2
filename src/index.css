@@ -1740,3 +1740,193 @@ footer::before {
   .dash-sprout { font-size: 18px; }
   .dash-side { padding: 16px 14px; }
 }
+
+/* ---------- grove event discovery + application (dashboard) ---------- */
+.grove-apply { display: grid; gap: 16px; align-content: start; }
+.grove-apply h3 { font-family: var(--display); font-size: 26px; margin: 0; letter-spacing: -0.02em; }
+.grove-apply h4 { font-family: var(--display); font-size: 21px; margin: 0; letter-spacing: -0.02em; }
+.grove-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.grove-card {
+  position: relative;
+  display: grid; gap: 4px; justify-items: start; text-align: left;
+  background: var(--card); border: var(--line); border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm); padding: 16px 15px 14px; cursor: pointer;
+  font-family: inherit; color: var(--ink);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+.grove-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.grove-card:focus-visible { outline: 2.5px solid var(--moss); outline-offset: 3px; }
+.grove-card b { font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.1em; }
+.grove-card small { color: var(--muted); font-weight: 600; font-size: 13.5px; line-height: 1.5; }
+.grove-card.picked { border: 2px solid var(--moss-deep); background: #f0f4e4; box-shadow: var(--shadow); }
+.grove-glyph {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 18px;
+  border: 1.5px solid rgba(47,53,44,0.25); color: var(--moss-deep); background: var(--mist);
+}
+.grove-apply[data-grove="play"] .grove-glyph { background: #f6e8c8; }
+.grove-apply[data-grove="build"] .grove-glyph { background: #2e352c; color: #f6e3b4; border-color: #2e352c; }
+.grove-apply[data-grove="gather"] .grove-glyph { background: #f9e8d8; color: #96522f; }
+.grove-check {
+  position: absolute; top: 10px; right: 10px;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  background: var(--moss-deep); color: #eef2df;
+  border-radius: 999px; padding: 5px 11px;
+}
+.grove-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.grove-grovebar { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.grove-micro { margin: 0; color: var(--muted); font-weight: 500; font-size: 14.5px; line-height: 1.6; flex: 1 1 240px; }
+.grove-micro em { font-family: var(--hand); font-style: normal; font-size: 19px; color: var(--clay); }
+.grove-shuffle:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+.grove-hint { margin: 0; font-size: 13px; font-weight: 600; color: var(--muted); line-height: 1.6; }
+.grove-buildintro {
+  background: #f6f1e2; border: 1.5px dashed #d9cdb4; border-radius: 16px; padding: 14px 15px;
+}
+.grove-buildintro p { margin: 8px 0 0; color: var(--muted); font-weight: 500; font-size: 14px; line-height: 1.65; }
+.grove-buildline { font-family: var(--display); font-size: 18px; letter-spacing: -0.01em; }
+.grove-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.grove-picks { display: grid; gap: 10px; }
+.grove-picks-3 { grid-template-columns: repeat(3, 1fr); }
+.grove-picks-2 { grid-template-columns: repeat(2, 1fr); }
+.grove-pick {
+  position: relative;
+  display: flex; gap: 12px; align-items: center; text-align: left;
+  background: var(--card); border: var(--line); border-radius: 16px;
+  box-shadow: var(--shadow-sm); padding: 12px 14px; cursor: pointer;
+  font-family: inherit; color: var(--ink);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+.grove-pick:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.grove-pick:focus-visible { outline: 2.5px solid var(--moss); outline-offset: 3px; }
+.grove-pick.picked { border: 2px solid var(--moss-deep); background: #fbf8ec; box-shadow: var(--shadow); }
+.grove-pick-glyph {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; font-size: 17px;
+  border: 1.5px solid rgba(47,53,44,0.25); color: var(--moss-deep); background: var(--mist);
+}
+.grove-apply[data-grove="play"] .grove-pick-glyph { background: #f6e8c8; }
+.grove-apply[data-grove="build"] .grove-pick-glyph { background: #2e352c; color: #f6e3b4; border-color: #2e352c; }
+.grove-apply[data-grove="gather"] .grove-pick-glyph { background: #f9e8d8; color: #96522f; }
+.grove-pick-text { display: grid; gap: 2px; min-width: 0; }
+.grove-pick-text b { font-family: var(--display); font-size: 17px; letter-spacing: -0.01em; }
+.grove-pick-text small { color: var(--muted); font-weight: 600; font-size: 12.5px; line-height: 1.5; }
+.grove-pick-check { position: static; margin-left: auto; flex-shrink: 0; }
+.grove-tag-pay { background: #f6e8c8; color: #6b5320; border-color: #d9c19a; }
+.grove-tag-free { background: var(--mist); color: var(--moss-deep); }
+.grove-tag-tba { background: transparent; color: var(--faint); }
+.grove-panel {
+  display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 16px; align-items: start;
+  border-top: 1.5px dashed #d9cdb4; padding-top: 16px;
+  animation: grove-in 0.28s ease;
+}
+@keyframes grove-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.grove-summary {
+  background: #fbf6e9; border: 1.5px solid #e6dcc4; border-radius: 16px; padding: 16px;
+  display: grid; gap: 8px; align-content: start;
+}
+.grove-apply[data-grove="play"] .grove-summary { border-top: 5px solid #c97a2e; }
+.grove-apply[data-grove="build"] .grove-summary { border-top: 5px solid var(--moss-deep); }
+.grove-apply[data-grove="gather"] .grove-summary { border-top: 5px solid #c99a3c; }
+.grove-themebar {
+  grid-column: 1 / -1;
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  border-radius: 14px; padding: 10px 14px;
+  font-weight: 700; font-size: 13.5px; line-height: 1.5;
+}
+.grove-tbadge {
+  font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+  border-radius: 999px; padding: 5px 12px; border: 1.5px solid currentColor; white-space: nowrap;
+}
+/* Play — playful + sporty: sun stripes, tilted game badge */
+.grove-apply[data-grove="play"] .grove-themebar {
+  background: repeating-linear-gradient(-45deg, #f6e3b4 0 14px, #f9edd2 14px 28px);
+  border: 1.5px solid #c97a2e; color: #6b4a1f; transform: rotate(-0.4deg);
+}
+.grove-apply[data-grove="play"] .grove-tbadge { background: #2f352c; color: #f6e3b4; border-color: #2f352c; }
+/* Build — coding / robotics / workshop: terminal bar */
+.grove-apply[data-grove="build"] .grove-themebar {
+  background: #1f241e; border: 1.5px solid #4a5347; color: #b9d39a;
+  font-family: var(--mono); font-size: 13px; font-weight: 400;
+}
+.grove-apply[data-grove="build"] .grove-themebar code { overflow-wrap: anywhere; }
+.term-dots { display: inline-flex; gap: 6px; flex-shrink: 0; }
+.term-dots i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+.term-dots i:nth-child(1) { background: #e8a87c; }
+.term-dots i:nth-child(2) { background: #e8cf8a; }
+.term-dots i:nth-child(3) { background: #9dbf8a; }
+/* Gather — entrepreneur / stage: warm spotlight, stamped badge */
+.grove-apply[data-grove="gather"] .grove-themebar {
+  background: linear-gradient(180deg, #fbeedf, #f6e0c6);
+  border: 1.5px solid #c98a5e; color: #7a4426;
+}
+.grove-apply[data-grove="gather"] .grove-tbadge { background: #96522f; color: #fbeedf; border-color: #96522f; transform: rotate(-2deg); }
+.grove-themefoot { margin: 12px 0 0; font-family: var(--hand); font-size: 20px; color: var(--clay); text-align: center; }
+.grove-apply[data-grove="build"] .grove-themefoot { font-family: var(--mono); font-size: 12.5px; }
+/* Per-grove selection tint inside the form */
+.grove-apply[data-grove="play"] .grove-opt.picked { border-color: #9a5233; background: #fdf0dc; }
+.grove-apply[data-grove="gather"] .grove-opt.picked { border-color: #96522f; background: #fbeedf; }
+.grove-price { background: var(--card); border: 1.5px dashed #d9cdb4; border-radius: 12px; padding: 10px 12px; display: grid; gap: 4px; font-size: 13.5px; line-height: 1.6; color: var(--muted); }
+.grove-price b { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--moss-deep); }
+.grove-price-free b { color: var(--moss-deep); font-size: 13px; }
+.grove-applied { margin: 4px 0 0; font-size: 13.5px; font-weight: 600; color: var(--moss-deep); background: var(--mist); border-radius: 10px; padding: 9px 11px; line-height: 1.6; }
+.grove-form { background: var(--card); border: var(--line); border-radius: 16px; padding: 18px 16px; display: grid; gap: 4px; align-content: start; box-shadow: var(--shadow-sm); }
+.grove-form .join-sub { margin-bottom: 6px; }
+.grove-formrow { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; align-items: start; }
+.grove-field { margin-top: 10px; }
+.grove-field input {
+  border: var(--line); border-radius: 14px; padding: 12px 14px;
+  font-family: var(--body); font-size: 15px; font-weight: 600;
+  background: #fffef8; color: var(--ink); outline: none; width: 100%;
+}
+.grove-field input:focus { border-color: var(--moss); box-shadow: 0 0 0 4px #e6efcf; }
+.grove-field input[aria-invalid="true"] { border-color: #c07a4e; box-shadow: 0 0 0 4px #f6ddc8; }
+.grove-fieldset { border: 1.5px dashed #d9cdb4; border-radius: 14px; padding: 12px; margin: 12px 0 0; display: grid; gap: 8px; }
+.grove-fieldset legend { font-weight: 800; font-size: 13.5px; color: var(--moss-deep); padding: 0 8px; }
+.grove-req { color: var(--clay); font-weight: 800; }
+.grove-opt-label { font-weight: 600; color: var(--faint); font-size: 12.5px; }
+.grove-radio-row { display: grid; gap: 8px; }
+.grove-check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.grove-opt {
+  display: flex; gap: 10px; align-items: flex-start;
+  border: 1.5px solid #d9cdb4; border-radius: 12px; padding: 10px 12px;
+  font-size: 13.5px; font-weight: 600; line-height: 1.55; cursor: pointer; background: #fffef8;
+}
+.grove-opt input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--moss-deep); flex-shrink: 0; cursor: pointer; }
+.grove-opt.picked { border-color: var(--moss-deep); background: #f0f4e4; }
+.grove-opt:focus-within { outline: 2px solid var(--moss); outline-offset: 2px; }
+.grove-form .ev-formerror, .grove-form .ev-demo { margin: 12px 0 0; }
+.grove-form .btn-clay { margin-top: 14px; justify-content: center; }
+.grove-form .btn-clay:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+.grove-success { background: var(--mist); border: 1.5px solid #9dbf8a; border-radius: 14px; padding: 16px 14px; display: grid; gap: 8px; margin-top: 10px; text-align: center; }
+.grove-success b { font-family: var(--display); font-size: 20px; }
+.grove-success p { margin: 0; font-size: 14px; line-height: 1.65; color: var(--moss-deep); font-weight: 500; }
+.grove-seal {
+  width: 52px; height: 52px; margin: 0 auto;
+  border-radius: 50%; background: var(--moss-deep); color: var(--sun-soft);
+  display: grid; place-items: center; font-size: 24px;
+  border: 2px dashed var(--sun-soft); transform: rotate(-6deg);
+}
+.grove-mine { border-top: 1.5px dashed #d9cdb4; padding-top: 14px; }
+.grove-minelist { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.grove-minelist li {
+  display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  background: #fbf6e9; border: 1px solid #e6dcc4; border-radius: 12px;
+  padding: 10px 12px; font-size: 13.5px; font-weight: 500; color: var(--ink); line-height: 1.55;
+}
+
+@media (max-width: 1020px) {
+  .grove-picks-3 { grid-template-columns: 1fr 1fr; }
+  .grove-panel { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .grove-cards { grid-template-columns: 1fr; }
+  .grove-picks-3, .grove-picks-2 { grid-template-columns: 1fr; }
+  .grove-formrow { grid-template-columns: 1fr; }
+  .grove-check-grid { grid-template-columns: 1fr; }
+  .grove-form .btn-clay { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .grove-panel { animation: none; }
+  .grove-card, .grove-pick, .btn { transition: none; }
+  .grove-card:hover, .grove-pick:hover, .btn:hover { transform: none; }
+}

@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { logout } from "../services/authService.js";
 import { navigate } from "../services/router.js";
 import { useAuth } from "../state/useAuth.js";
+import GroveApply from "../components/GroveApply.jsx";
 
 const SIDE_LINKS = [
   { id: "announcements", label: "Announcements", icon: "✿", href: "/dashboard" },
@@ -387,6 +388,8 @@ export default function DashboardPage() {
                   </span>
                 </div>
               </div>
+
+              <GroveApply user={user} />
             </>
           ) : (
             <>
