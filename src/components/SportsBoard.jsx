@@ -222,37 +222,36 @@ export default function SportsBoard({ user }) {
               <p>The crew hasn't launched one — check the notice board for the call.</p>
             </div>
           ) : (
-            <ol className="notice-list">
+            <div className="event-list">
               {events.map((ev) => {
                 const myCount = mine.teams.filter((t) => t.eventId === ev.id).length;
                 return (
-                  <li key={ev.id} className="notice-item">
-                    <div className="notice-card">
-                      <div className="notice-top">
-                        <span className="notice-date">{ev.category}</span>
-                        <span className={ev.status === "open" ? "dash-tag" : "dash-tag admin-tag"}>
-                          {ev.status === "open" ? "● open" : "■ closed"}
-                        </span>
-                        {ev.eventDate && <span className="dash-tag">{ev.eventDate}</span>}
-                        {myCount > 0 && <span className="dash-tag">★ in {myCount} team{myCount > 1 ? "s" : ""}</span>}
-                      </div>
-                      <b className="notice-title">{ev.title}</b>
-                      {ev.description && <p className="notice-body">{ev.description}</p>}
-                      <div className="maker-tags">
-                        {(ev.sports || []).map((s) => (
-                          <span key={s} className="dash-tag">{(meta.sports.find((x) => x.id === s) || {}).name || s}</span>
-                        ))}
-                      </div>
-                      <div className="dash-play-row">
-                        <button type="button" className="btn btn-clay dash-btn" onClick={() => openEvent(ev.id)}>
-                          Open event →
-                        </button>
-                      </div>
+                  <article key={ev.id} className={ev.status === "open" ? "event-card" : "event-card closed"}>
+                    <div className="event-top">
+                      <span className="event-cat">{ev.category}</span>
+                      <span className={ev.status === "open" ? "event-status open" : "event-status closed"}>
+                        {ev.status === "open" ? "● open" : "■ closed"}
+                      </span>
                     </div>
-                  </li>
+                    <h4 className="event-title">{ev.title}</h4>
+                    {ev.description && <p className="event-desc">{ev.description}</p>}
+                    <div className="event-meta">
+                      {ev.eventDate && <span>📅 {ev.eventDate}</span>}
+                      {ev.venue && <span>📍 {ev.venue}</span>}
+                      {myCount > 0 && <span className="event-mine">★ in {myCount} team{myCount > 1 ? "s" : ""}</span>}
+                    </div>
+                    <div className="event-sports">
+                      {(ev.sports || []).map((s) => (
+                        <span key={s} className="event-sport">{(meta.sports.find((x) => x.id === s) || {}).name || s}</span>
+                      ))}
+                    </div>
+                    <button type="button" className="btn btn-clay dash-btn event-cta" onClick={() => openEvent(ev.id)}>
+                      Open event →
+                    </button>
+                  </article>
                 );
               })}
-            </ol>
+            </div>
           )}
         </article>
       )}

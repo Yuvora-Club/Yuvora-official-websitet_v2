@@ -629,36 +629,36 @@ function SportsTab() {
             <p>Members see an empty Sports page until you do.</p>
           </div>
         ) : (
-          <ol className="notice-list">
+          <div className="event-list">
             {events.map((ev) => (
-              <li key={ev.id} className="notice-item">
-                <div className="notice-card">
-                  <div className="notice-top">
-                    <span className="notice-date">{ev.category}</span>
-                    <span className={ev.status === "open" ? "dash-tag" : "dash-tag admin-tag"}>
-                      {ev.status === "open" ? "● open" : "■ closed"}
-                    </span>
-                    {ev.eventDate && <span className="dash-tag">{ev.eventDate}</span>}
-                  </div>
-                  <b className="notice-title">{ev.title}</b>
-                  {ev.description && <p className="notice-body">{ev.description}</p>}
-                  {ev.venue && <small className="admin-item-meta">📍 {ev.venue}</small>}
-                  <div className="maker-tags">
-                    {(ev.sports || []).map((s) => (
-                      <span key={s} className="dash-tag">{sportName(s)}</span>
-                    ))}
-                  </div>
-                  <div className="dash-play-row">
-                    <button type="button" className="btn btn-paper dash-btn" onClick={() => startEdit(ev)}>Edit ✎</button>
-                    <button type="button" className="btn btn-paper dash-btn" onClick={() => onToggleStatus(ev)}>
-                      {ev.status === "open" ? "Close ■" : "Reopen ●"}
-                    </button>
-                    <button type="button" className="btn btn-paper dash-btn" onClick={() => onDelete(ev.id)}>Delete ✕</button>
-                  </div>
+              <article key={ev.id} className={ev.status === "open" ? "event-card" : "event-card closed"}>
+                <div className="event-top">
+                  <span className="event-cat">{ev.category}</span>
+                  <span className={ev.status === "open" ? "event-status open" : "event-status closed"}>
+                    {ev.status === "open" ? "● open" : "■ closed"}
+                  </span>
                 </div>
-              </li>
+                <h4 className="event-title">{ev.title}</h4>
+                {ev.description && <p className="event-desc">{ev.description}</p>}
+                <div className="event-meta">
+                  {ev.eventDate && <span>📅 {ev.eventDate}</span>}
+                  {ev.venue && <span>📍 {ev.venue}</span>}
+                </div>
+                <div className="event-sports">
+                  {(ev.sports || []).map((s) => (
+                    <span key={s} className="event-sport">{sportName(s)}</span>
+                  ))}
+                </div>
+                <div className="dash-play-row">
+                  <button type="button" className="btn btn-paper dash-btn" onClick={() => startEdit(ev)}>Edit ✎</button>
+                  <button type="button" className="btn btn-paper dash-btn" onClick={() => onToggleStatus(ev)}>
+                    {ev.status === "open" ? "Close ■" : "Reopen ●"}
+                  </button>
+                  <button type="button" className="btn btn-paper dash-btn" onClick={() => onDelete(ev.id)}>Delete ✕</button>
+                </div>
+              </article>
             ))}
-          </ol>
+          </div>
         )}
       </div>
     </div>
