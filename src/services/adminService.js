@@ -1,25 +1,28 @@
 // Admin client — profile, user directory, and dynamic add-user.
-// Every call needs the admin ID token from POST /api/auth/login.
+// Calls go through apiFetchAuth: the live ID token is attached, and an
+// expired session is refreshed + retried once before surfacing an error.
 
-import { apiFetch } from "./api.js";
-import { getLiveSession } from "./authService.js";
-
-function authHeaders() {
-  const session = getLiveSession();
-  const token = session && session.idToken;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { apiFetchAuth } from "./api.js";
 
 function friendlyError(err) {
+  const sessionExpired = !!(err && (err.sessionExpired || err.status === 401));
   const payload = err && err.data;
-  if (payload && payload.errors) return { ok: false, errors: payload.errors };
-  if (payload && payload.error) return { ok: false, formError: payload.error };
-  return { ok: false, formError: "Couldn't reach the admin server. Check your connection and try again." };
+  if (payload && payload.errors) return { ok: false, errors: payload.errors, sessionExpired };
+  if (payload && payload.error) {
+    return {
+      ok: false,
+      formError: sessionExpired
+        ? "Admin session expired. Log in again, then retry."
+        : payload.error,
+      sessionExpired,
+    };
+  }
+  return { ok: false, formError: "Couldn't reach the admin server. Check your connection and try again.", sessionExpired: false };
 }
 
 export async function fetchAdminMe() {
   try {
-    const data = await apiFetch("/api/admin/me", { headers: authHeaders() });
+    const data = await apiFetchAuth("/api/admin/me");
     return { ok: true, admin: data.admin };
   } catch (err) {
     return friendlyError(err);
@@ -28,7 +31,7 @@ export async function fetchAdminMe() {
 
 export async function fetchAdminUsers() {
   try {
-    const data = await apiFetch("/api/admin/users", { headers: authHeaders() });
+    const data = await apiFetchAuth("/api/admin/users");
     return { ok: true, users: Array.isArray(data.users) ? data.users : [] };
   } catch (err) {
     return friendlyError(err);
@@ -37,9 +40,8 @@ export async function fetchAdminUsers() {
 
 export async function createAdminUser({ fullName, email, phone, birthDate, age, password }) {
   try {
-    const data = await apiFetch("/api/admin/users", {
+    const data = await apiFetchAuth("/api/admin/users", {
       method: "POST",
-      headers: authHeaders(),
       body: JSON.stringify({ fullName, email, phone, birthDate, age, password }),
     });
     return { ok: true, user: data.user };
@@ -51,9 +53,8 @@ export async function createAdminUser({ fullName, email, phone, birthDate, age, 
 /** Update own profile — ONLY phone, birthDate, age, role are writable. */
 export async function updateAdminProfile({ phone, birthDate, age, role }) {
   try {
-    const data = await apiFetch("/api/admin/profile", {
+    const data = await apiFetchAuth("/api/admin/profile", {
       method: "PUT",
-      headers: authHeaders(),
       body: JSON.stringify({ phone, birthDate, age, role }),
     });
     return { ok: true, admin: data.admin };

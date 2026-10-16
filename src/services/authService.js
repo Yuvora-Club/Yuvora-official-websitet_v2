@@ -145,7 +145,7 @@ export async function loginLive({ email, password }) {
       method: "POST",
       body: JSON.stringify({ email: cleanEmail, password }),
     });
-    const user = saveLiveSession(data.user, data.idToken);
+    const user = saveLiveSession(data.user, data.idToken, data.refreshToken);
     return { ok: true, user };
   } catch (err) {
     const payload = err && err.data;
@@ -156,11 +156,12 @@ export async function loginLive({ email, password }) {
 }
 
 /** Persist a backend user as the signed-in session (used by login AND join). */
-export function saveLiveSession(backendUser, token) {
+export function saveLiveSession(backendUser, token, refreshToken = null) {
   const user = toPublicUser(backendUser);
   writeJSON(LIVE_SESSION_KEY, {
     user,
     idToken: token || null,
+    refreshToken: refreshToken || null,
     at: new Date().toISOString(),
   });
   notify(CHANNEL);
@@ -264,4 +265,42 @@ export function logout() {
   setSession(null);
   removeKey(LIVE_SESSION_KEY);
   notify(CHANNEL);
+}
+
+// Single-flight session refresh: mints a fresh ID token via
+// POST /api/auth/token (refreshToken from login, or the Join customToken
+// exchanged once). Resolves the new idToken, or null when a real re-login
+// is needed. Concurrent callers share one in-flight refresh.
+let refreshPromise = null;
+
+export function refreshLiveToken() {
+  if (refreshPromise) return refreshPromise;
+  refreshPromise = (async () => {
+    try {
+      const session = readJSON(LIVE_SESSION_KEY, null);
+      if (!session || (!session.refreshToken && !session.idToken)) return null;
+      const body = session.refreshToken
+        ? { refreshToken: session.refreshToken }
+        : { customToken: session.idToken };
+      const data = await apiFetch("/api/auth/token", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
+      if (!data || !data.idToken) return null;
+      writeJSON(LIVE_SESSION_KEY, {
+        ...session,
+        user: session.user,
+        idToken: data.idToken,
+        refreshToken: data.refreshToken || session.refreshToken || null,
+        at: new Date().toISOString(),
+      });
+      notify(CHANNEL);
+      return data.idToken;
+    } catch {
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+  return refreshPromise;
 }

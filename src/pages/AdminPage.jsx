@@ -306,6 +306,7 @@ function AddUserTab() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
+  const [sessionGone, setSessionGone] = useState(false);
   const [success, setSuccess] = useState("");
   const [busy, setBusy] = useState(false);
   const [users, setUsers] = useState([]);
@@ -328,6 +329,7 @@ function AddUserTab() {
     e.preventDefault();
     setErrors({});
     setFormError("");
+    setSessionGone(false);
     setSuccess("");
     setBusy(true);
     const res = await createAdminUser({
@@ -341,6 +343,7 @@ function AddUserTab() {
     if (!res.ok) {
       setErrors(res.errors || {});
       setFormError(res.formError || "Could not create the admin user — check the fields.");
+      setSessionGone(!!res.sessionExpired);
       return;
     }
     setSuccess(`${res.user.fullName} is now an admin. They can log in and open /admin.`);
@@ -362,7 +365,10 @@ function AddUserTab() {
         </p>
         {formError && (
           <p className="ev-formerror" role="alert">
-            {formError}
+            {formError}{" "}
+            {sessionGone && (
+              <a href="/login?next=%2Fadmin">Log in again →</a>
+            )}
           </p>
         )}
         {success && (

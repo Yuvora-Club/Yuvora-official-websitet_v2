@@ -2,20 +2,20 @@
 // Writes need the member ID token (POST /api/auth/login) in the header;
 // the meta + event list are public.
 
-import { apiFetch } from "./api.js";
-import { getLiveSession } from "./authService.js";
-
-function authHeaders() {
-  const session = getLiveSession();
-  const token = session && session.idToken;
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+import { apiFetch, apiFetchAuth } from "./api.js";
 
 function friendlyError(err) {
+  const sessionExpired = !!(err && (err.sessionExpired || err.status === 401));
   const payload = err && err.data;
-  if (payload && payload.errors) return { ok: false, errors: payload.errors };
-  if (payload && payload.error) return { ok: false, formError: payload.error };
-  return { ok: false, formError: "Couldn't reach the sports server. Check your connection and try again." };
+  if (payload && payload.errors) return { ok: false, errors: payload.errors, sessionExpired };
+  if (payload && payload.error) {
+    return {
+      ok: false,
+      formError: sessionExpired ? "Session expired. Log in again, then retry." : payload.error,
+      sessionExpired,
+    };
+  }
+  return { ok: false, formError: "Couldn't reach the sports server. Check your connection and try again.", sessionExpired: false };
 }
 
 export async function fetchSportsMeta() {
@@ -42,9 +42,8 @@ export async function listSportEvents() {
 
 export async function createSportEvent(payload) {
   try {
-    const data = await apiFetch("/api/sport-events", {
+    const data = await apiFetchAuth("/api/sport-events", {
       method: "POST",
-      headers: authHeaders(),
       body: JSON.stringify(payload),
     });
     return { ok: true, event: data.event };
@@ -55,9 +54,8 @@ export async function createSportEvent(payload) {
 
 export async function updateSportEvent(id, payload) {
   try {
-    const data = await apiFetch(`/api/sport-events/${encodeURIComponent(id)}`, {
+    const data = await apiFetchAuth(`/api/sport-events/${encodeURIComponent(id)}`, {
       method: "PUT",
-      headers: authHeaders(),
       body: JSON.stringify(payload),
     });
     return { ok: true, event: data.event };
@@ -68,9 +66,8 @@ export async function updateSportEvent(id, payload) {
 
 export async function deleteSportEvent(id) {
   try {
-    await apiFetch(`/api/sport-events/${encodeURIComponent(id)}`, {
+    await apiFetchAuth(`/api/sport-events/${encodeURIComponent(id)}`, {
       method: "DELETE",
-      headers: authHeaders(),
     });
     return { ok: true };
   } catch (err) {
@@ -81,7 +78,7 @@ export async function deleteSportEvent(id) {
 export async function listTeams(eventId, sportId) {
   const q = `?eventId=${encodeURIComponent(eventId)}${sportId ? `&sportId=${encodeURIComponent(sportId)}` : ""}`;
   try {
-    const data = await apiFetch(`/api/teams${q}`, { headers: authHeaders() });
+    const data = await apiFetchAuth(`/api/teams${q}`);
     return { ok: true, teams: Array.isArray(data.teams) ? data.teams : [] };
   } catch (err) {
     return friendlyError(err);
@@ -90,7 +87,7 @@ export async function listTeams(eventId, sportId) {
 
 export async function fetchMyTeams() {
   try {
-    const data = await apiFetch("/api/my-teams", { headers: authHeaders() });
+    const data = await apiFetchAuth("/api/my-teams");
     return {
       ok: true,
       teams: Array.isArray(data.teams) ? data.teams : [],
@@ -103,9 +100,8 @@ export async function fetchMyTeams() {
 
 export async function createTeam({ eventId, sportId, name }) {
   try {
-    const data = await apiFetch("/api/teams", {
+    const data = await apiFetchAuth("/api/teams", {
       method: "POST",
-      headers: authHeaders(),
       body: JSON.stringify({ eventId, sportId, name }),
     });
     return { ok: true, team: data.team };
@@ -116,9 +112,8 @@ export async function createTeam({ eventId, sportId, name }) {
 
 export async function requestToJoin(teamId) {
   try {
-    const data = await apiFetch(`/api/teams/${encodeURIComponent(teamId)}/request`, {
+    const data = await apiFetchAuth(`/api/teams/${encodeURIComponent(teamId)}/request`, {
       method: "POST",
-      headers: authHeaders(),
       body: JSON.stringify({}),
     });
     return { ok: true, captain: data.captain };
@@ -129,9 +124,7 @@ export async function requestToJoin(teamId) {
 
 export async function fetchTeamRequests(teamId) {
   try {
-    const data = await apiFetch(`/api/teams/${encodeURIComponent(teamId)}/requests`, {
-      headers: authHeaders(),
-    });
+    const data = await apiFetchAuth(`/api/teams/${encodeURIComponent(teamId)}/requests`);
     return { ok: true, requests: Array.isArray(data.requests) ? data.requests : [] };
   } catch (err) {
     return { ok: false, ...friendlyError(err), requests: [] };
@@ -140,9 +133,8 @@ export async function fetchTeamRequests(teamId) {
 
 export async function decideRequest(teamId, uid, action) {
   try {
-    const data = await apiFetch(`/api/teams/${encodeURIComponent(teamId)}/requests/${encodeURIComponent(uid)}`, {
+    const data = await apiFetchAuth(`/api/teams/${encodeURIComponent(teamId)}/requests/${encodeURIComponent(uid)}`, {
       method: "POST",
-      headers: authHeaders(),
       body: JSON.stringify({ action }),
     });
     return { ok: true, ...data };
@@ -153,9 +145,8 @@ export async function decideRequest(teamId, uid, action) {
 
 export async function leaveTeam(teamId) {
   try {
-    await apiFetch(`/api/teams/${encodeURIComponent(teamId)}/leave`, {
+    await apiFetchAuth(`/api/teams/${encodeURIComponent(teamId)}/leave`, {
       method: "DELETE",
-      headers: authHeaders(),
     });
     return { ok: true };
   } catch (err) {
@@ -165,9 +156,8 @@ export async function leaveTeam(teamId) {
 
 export async function deleteTeam(teamId) {
   try {
-    await apiFetch(`/api/teams/${encodeURIComponent(teamId)}`, {
+    await apiFetchAuth(`/api/teams/${encodeURIComponent(teamId)}`, {
       method: "DELETE",
-      headers: authHeaders(),
     });
     return { ok: true };
   } catch (err) {

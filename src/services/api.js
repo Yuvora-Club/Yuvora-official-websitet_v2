@@ -75,3 +75,38 @@ export async function apiFetch(path, options = {}) {
   }
   return data;
 }
+
+/**
+ * Authed fetch: attaches the live ID token, and on a 401 refreshes the
+ * session once (POST /api/auth/token) and retries — so admin/member
+ * actions survive token expiry instead of failing with "session expired".
+ * Dynamic import avoids a static cycle with authService.
+ */
+export async function apiFetchAuth(path, options = {}) {
+  const { getLiveSession, refreshLiveToken } = await import("./authService.js");
+  async function once(token) {
+    return apiFetch(path, {
+      ...options,
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(options.headers || {}),
+      },
+    });
+  }
+  try {
+    return await once(getLiveSession()?.idToken);
+  } catch (err) {
+    if (!err || err.status !== 401) throw err;
+    const fresh = await refreshLiveToken().catch(() => null);
+    if (!fresh) {
+      err.sessionExpired = true;
+      throw err;
+    }
+    try {
+      return await once(fresh);
+    } catch (retryErr) {
+      retryErr.sessionExpired = retryErr && retryErr.status === 401;
+      throw retryErr;
+    }
+  }
+}
