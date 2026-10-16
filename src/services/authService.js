@@ -129,7 +129,7 @@ export function isAdminUser(user) {
   if (user.role === "admin") return true;
   // Seed-admin fallback so /admin stays reachable even if an old session
   // was saved before `role` existed on the profile.
-  return String(user.email || "").toLowerCase() === "rishithamnchala989@gmail.com";
+  return String(user.email || "").toLowerCase() === "rishithmanchala989@gmail.com";
 }
 
 /**
