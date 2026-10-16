@@ -2,17 +2,17 @@
 //
 // Reads the backend URL from Vite env:
 //   VITE_API_URL  (e.g. http://localhost:4000 locally,
-//                   https://yuvorabackend-production.up.railway.app in production)
+//                   https://yuvora-backend.onrender.com in production)
 //
 // Files (repo root):
 //   .env.development  -> VITE_API_URL=http://localhost:4000
-//   .env.production   -> VITE_API_URL=https://yuvorabackend-production.up.railway.app
+//   .env.production   -> VITE_API_URL=https://yuvora-backend.onrender.com
 //
 // Usage:
 //   import { API_BASE_URL, apiUrl, apiFetch } from "./api.js";
 //   const { events } = await apiFetch("/api/events");
 
-const PROD_API_URL = "https://yuvorabackend-production.up.railway.app";
+const PROD_API_URL = "https://yuvora-backend.onrender.com";
 
 function normalizeBaseUrl(raw) {
   // A baked VITE_API_URL without a scheme (e.g. "xyz.up.railway.app")
