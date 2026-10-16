@@ -2,17 +2,27 @@
 //
 // Reads the backend URL from Vite env:
 //   VITE_API_URL  (e.g. http://localhost:4000 locally,
-//                   https://yuvora-backend.onrender.com in production)
+//                   https://yuvorabackend-production.up.railway.app in production)
 //
 // Files (repo root):
 //   .env.development  -> VITE_API_URL=http://localhost:4000
-//   .env.production   -> VITE_API_URL=https://yuvora-backend.onrender.com
+//   .env.production   -> VITE_API_URL=https://yuvorabackend-production.up.railway.app
 //
 // Usage:
 //   import { API_BASE_URL, apiUrl, apiFetch } from "./api.js";
 //   const { events } = await apiFetch("/api/events");
 
-const PROD_API_URL = "https://yuvora-backend.onrender.com";
+const PROD_API_URL = "https://yuvorabackend-production.up.railway.app";
+
+function normalizeBaseUrl(raw) {
+  // A baked VITE_API_URL without a scheme (e.g. "xyz.up.railway.app")
+  // would be treated as a RELATIVE path and POST to the static host
+  // (GitHub Pages answers 405). Force https:// so that can never happen.
+  let v = String(raw || "").trim().replace(/\/+$/, "");
+  if (!v) return "";
+  if (!/^https?:\/\//i.test(v)) v = `https://${v}`;
+  return v;
+}
 
 function defaultApiUrl() {
   // If the production build forgot to bake VITE_API_URL (e.g. the Pages
@@ -24,9 +34,8 @@ function defaultApiUrl() {
   return "http://localhost:4000";
 }
 
-export const API_BASE_URL = (
-  import.meta.env.VITE_API_URL || defaultApiUrl()
-).replace(/\/+$/, "");
+export const API_BASE_URL =
+  normalizeBaseUrl(import.meta.env.VITE_API_URL) || defaultApiUrl();
 
 /** Join the base URL with an `/api/...` path. */
 export function apiUrl(path = "/") {
