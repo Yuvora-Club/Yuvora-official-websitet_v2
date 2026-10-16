@@ -12,7 +12,7 @@ import {
   listAnnouncements,
   updateAnnouncement,
 } from "../services/announcementsService.js";
-import { createAdminUser, fetchAdminMe, fetchAdminUsers, updateAdminEmail, updateAdminPassword } from "../services/adminService.js";
+import { createAdminUser, fetchAdminMe, fetchAdminUsers, updateAdminProfile } from "../services/adminService.js";
 import { calcAge, displayAge } from "../utils/age.js";
 
 const TABS = [
@@ -434,120 +434,101 @@ function AddUserTab() {
   );
 }
 
-function CredentialsCard({ currentEmail, onEmailChanged }) {
-  const [newEmail, setNewEmail] = useState("");
-  const [emailPassword, setEmailPassword] = useState("");
-  const [emailErrors, setEmailErrors] = useState({});
-  const [emailMsg, setEmailMsg] = useState({ type: "", text: "" });
-  const [emailBusy, setEmailBusy] = useState(false);
-  const [curPass, setCurPass] = useState("");
-  const [newPass, setNewPass] = useState("");
-  const [confirmPass, setConfirmPass] = useState("");
-  const [passErrors, setPassErrors] = useState({});
-  const [passMsg, setPassMsg] = useState({ type: "", text: "" });
-  const [passBusy, setPassBusy] = useState(false);
+function ProfileEditCard({ profile, onSaved }) {
+  const [phone, setPhone] = useState(profile.phone || "");
+  const [birthDate, setBirthDate] = useState(profile.birthDate || "");
+  const [age, setAge] = useState(profile.birthDate ? "" : (profile.age ?? ""));
+  const [role, setRole] = useState(profile.role || "admin");
+  const [errors, setErrors] = useState({});
+  const [msg, setMsg] = useState({ type: "", text: "" });
+  const [busy, setBusy] = useState(false);
 
-  async function onEmailSubmit(e) {
-    e.preventDefault();
-    setEmailErrors({});
-    setEmailMsg({ type: "", text: "" });
-    setEmailBusy(true);
-    const res = await updateAdminEmail({ newEmail, password: emailPassword });
-    setEmailBusy(false);
-    if (!res.ok) {
-      setEmailErrors(res.errors || {});
-      setEmailMsg({ type: "error", text: res.formError || "Could not change the email — check the fields." });
-      return;
-    }
-    patchLiveSessionUser({ email: res.admin.email, fullName: res.admin.fullName });
-    onEmailChanged(res.admin);
-    setNewEmail("");
-    setEmailPassword("");
-    setEmailMsg({ type: "success", text: `Login email is now ${res.admin.email}. Use it next time you sign in.` });
-  }
+  // Refresh the form when the server profile arrives/changes.
+  useEffect(() => {
+    setPhone(profile.phone || "");
+    setBirthDate(profile.birthDate || "");
+    setAge(profile.birthDate ? "" : (profile.age ?? ""));
+    setRole(profile.role || "admin");
+  }, [profile.phone, profile.birthDate, profile.age, profile.role]);
 
-  async function onPasswordSubmit(e) {
+  const previewAge = calcAge(birthDate);
+
+  async function onSubmit(e) {
     e.preventDefault();
-    setPassErrors({});
-    setPassMsg({ type: "", text: "" });
-    if (newPass !== confirmPass) {
-      setPassErrors({ confirm: "New passwords don't match yet." });
-      return;
+    setErrors({});
+    setMsg({ type: "", text: "" });
+    if (role === "member" && profile.role === "admin") {
+      if (!window.confirm("Step down to member? You will lose /admin access immediately.")) return;
     }
-    setPassBusy(true);
-    const res = await updateAdminPassword({ currentPassword: curPass, newPassword: newPass });
-    setPassBusy(false);
+    setBusy(true);
+    const res = await updateAdminProfile({
+      phone,
+      birthDate,
+      age: age === "" ? undefined : Number(age),
+      role,
+    });
+    setBusy(false);
     if (!res.ok) {
-      setPassErrors(res.errors || {});
-      setPassMsg({ type: "error", text: res.formError || "Could not change the password — check the fields." });
+      setErrors(res.errors || {});
+      setMsg({ type: "error", text: res.formError || "Could not save — check the fields." });
       return;
     }
-    setPassMsg({ type: "success", text: "Password changed — signing you out. Log in again with the new one." });
-    setTimeout(() => {
-      logout();
-      navigate("/login?next=%2Fadmin");
-    }, 1200);
+    patchLiveSessionUser({
+      phone: res.admin.phone,
+      birthDate: res.admin.birthDate,
+      age: res.admin.age,
+      role: res.admin.role,
+    });
+    onSaved(res.admin);
+    setMsg({ type: "success", text: "Profile updated ✓" });
   }
 
   return (
     <div className="join-card admin-card">
-      <h3>Login credentials 🔐</h3>
+      <h3>Edit profile ✎</h3>
       <p className="join-sub">
-        Change the email + password you sign in with. Current password is required for both — a leftover session alone can't do this.
+        Only <b>phone, birth date, age and role</b> can change here — name and email stay fixed.
+        {birthDate || previewAge != null ? " Age follows the birth date automatically." : ""}
       </p>
-      <div className="maker-grid">
-        <form onSubmit={onEmailSubmit} noValidate className="maker-form">
-          <p className="join-group-title">❧ change email · now {currentEmail || "—"}</p>
-          {emailMsg.text && (
-            <p className={emailMsg.type === "success" ? "ev-success" : "ev-formerror"} role={emailMsg.type === "success" ? "status" : "alert"}>
-              {emailMsg.text}
-            </p>
-          )}
-          <label className="field auth-field" htmlFor="admin-cred-email">
-            <span className="auth-label">New email</span>
-            <input id="admin-cred-email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="you@newmail.com" autoComplete="off" />
-            {emailErrors.newEmail && <span className="ev-error">{emailErrors.newEmail}</span>}
+      {msg.text && (
+        <p className={msg.type === "success" ? "ev-success" : "ev-formerror"} role={msg.type === "success" ? "status" : "alert"}>
+          {msg.text}
+        </p>
+      )}
+      <form onSubmit={onSubmit} noValidate>
+        <div className="auth-row">
+          <label className="field auth-field" htmlFor="admin-edit-phone">
+            <span className="auth-label">Phone</span>
+            <input id="admin-edit-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="10-digit mobile" inputMode="numeric" autoComplete="off" />
+            {errors.phone && <span className="ev-error">{errors.phone}</span>}
           </label>
-          <label className="field auth-field" htmlFor="admin-cred-email-pass">
-            <span className="auth-label">Current password</span>
-            <input id="admin-cred-email-pass" type="password" value={emailPassword} onChange={(e) => setEmailPassword(e.target.value)} placeholder="prove it's you" autoComplete="current-password" />
-            {emailErrors.password && <span className="ev-error">{emailErrors.password}</span>}
+          <label className="field auth-field" htmlFor="admin-edit-dob">
+            <span className="auth-label">Birth date {previewAge != null ? `· age ${previewAge}` : ""}</span>
+            <input id="admin-edit-dob" type="date" value={birthDate} max={new Date().toISOString().slice(0, 10)} onChange={(e) => setBirthDate(e.target.value)} />
+            {errors.birthDate && <span className="ev-error">{errors.birthDate}</span>}
           </label>
-          <div className="dash-play-row">
-            <button className="btn btn-clay dash-btn" type="submit" disabled={emailBusy}>
-              {emailBusy ? "Saving…" : "Change email →"}
-            </button>
-          </div>
-        </form>
-        <form onSubmit={onPasswordSubmit} noValidate className="maker-form">
-          <p className="join-group-title">❧ change password</p>
-          {passMsg.text && (
-            <p className={passMsg.type === "success" ? "ev-success" : "ev-formerror"} role={passMsg.type === "success" ? "status" : "alert"}>
-              {passMsg.text}
-            </p>
-          )}
-          <label className="field auth-field" htmlFor="admin-cred-cur">
-            <span className="auth-label">Current password</span>
-            <input id="admin-cred-cur" type="password" value={curPass} onChange={(e) => setCurPass(e.target.value)} placeholder="current password" autoComplete="current-password" />
-            {passErrors.password && <span className="ev-error">{passErrors.password}</span>}
+        </div>
+        <div className="auth-row">
+          <label className="field auth-field" htmlFor="admin-edit-age">
+            <span className="auth-label">Age {birthDate ? "(from birth date ↑)" : "(manual)"}</span>
+            <input id="admin-edit-age" type="number" min="10" max="100" value={age} disabled={!!birthDate} onChange={(e) => setAge(e.target.value)} placeholder={birthDate ? String(previewAge ?? "") : "e.g. 15"} />
+            {errors.age && <span className="ev-error">{errors.age}</span>}
           </label>
-          <label className="field auth-field" htmlFor="admin-cred-new">
-            <span className="auth-label">New password (min 8)</span>
-            <input id="admin-cred-new" type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} placeholder="new password" autoComplete="new-password" />
-            {passErrors.newPassword && <span className="ev-error">{passErrors.newPassword}</span>}
+          <label className="field auth-field" htmlFor="admin-edit-role">
+            <span className="auth-label">Role</span>
+            <select id="admin-edit-role" className="admin-select" value={role} onChange={(e) => setRole(e.target.value)}>
+              <option value="admin">★ admin</option>
+              <option value="member">member</option>
+            </select>
+            {errors.role && <span className="ev-error">{errors.role}</span>}
           </label>
-          <label className="field auth-field" htmlFor="admin-cred-confirm">
-            <span className="auth-label">Confirm new password</span>
-            <input id="admin-cred-confirm" type="password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} placeholder="repeat new password" autoComplete="new-password" />
-            {passErrors.confirm && <span className="ev-error">{passErrors.confirm}</span>}
-          </label>
-          <div className="dash-play-row">
-            <button className="btn btn-clay dash-btn" type="submit" disabled={passBusy}>
-              {passBusy ? "Saving…" : "Change password →"}
-            </button>
-          </div>
-        </form>
-      </div>
+        </div>
+        <div className="dash-play-row">
+          <button className="btn btn-clay dash-btn" type="submit" disabled={busy}>
+            {busy ? "Saving…" : "Save changes ✓"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -611,11 +592,11 @@ function ProfileTab({ sessionUser }) {
           </div>
           <div>
             <dt>Role</dt>
-            <dd>★ admin</dd>
+            <dd>{profile.role === "member" ? "member" : "★ admin"}</dd>
           </div>
         </dl>
       </div>
-      <CredentialsCard currentEmail={profile.email} onEmailChanged={(a) => setAdmin(a)} />
+      <ProfileEditCard profile={profile} onSaved={(a) => setAdmin(a)} />
     </div>
   );
 }

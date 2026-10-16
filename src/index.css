@@ -1949,6 +1949,19 @@ footer::before {
   min-height: 96px;
 }
 .admin-textarea:focus { border-color: var(--moss); box-shadow: 0 0 0 4px #e6efcf; }
+.admin-select {
+  width: 100%;
+  border: var(--line);
+  border-radius: 14px;
+  padding: 13px 15px;
+  font-family: var(--body);
+  font-size: 15.5px;
+  font-weight: 600;
+  background: #fffef8;
+  color: var(--ink);
+  outline: none;
+}
+.admin-select:focus { border-color: var(--moss); box-shadow: 0 0 0 4px #e6efcf; }
 .admin-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; }
 .admin-item {
   background: #fbf6e9;

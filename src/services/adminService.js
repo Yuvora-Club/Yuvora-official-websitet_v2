@@ -48,29 +48,15 @@ export async function createAdminUser({ fullName, email, phone, birthDate, age, 
   }
 }
 
-/** Change own login email (current password required). Returns updated admin. */
-export async function updateAdminEmail({ newEmail, password }) {
+/** Update own profile — ONLY phone, birthDate, age, role are writable. */
+export async function updateAdminProfile({ phone, birthDate, age, role }) {
   try {
-    const data = await apiFetch("/api/admin/credentials/email", {
+    const data = await apiFetch("/api/admin/profile", {
       method: "PUT",
       headers: authHeaders(),
-      body: JSON.stringify({ newEmail, password }),
+      body: JSON.stringify({ phone, birthDate, age, role }),
     });
     return { ok: true, admin: data.admin };
-  } catch (err) {
-    return friendlyError(err);
-  }
-}
-
-/** Change own password (current password required). Caller must re-login. */
-export async function updateAdminPassword({ currentPassword, newPassword }) {
-  try {
-    await apiFetch("/api/admin/credentials/password", {
-      method: "PUT",
-      headers: authHeaders(),
-      body: JSON.stringify({ currentPassword, newPassword }),
-    });
-    return { ok: true };
   } catch (err) {
     return friendlyError(err);
   }
