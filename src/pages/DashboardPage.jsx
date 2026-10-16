@@ -9,6 +9,7 @@ import { isAdminUser, logout } from "../services/authService.js";
 import { navigate } from "../services/router.js";
 import { useAuth } from "../state/useAuth.js";
 import { listAnnouncements } from "../services/announcementsService.js";
+import SportsBoard from "../components/SportsBoard.jsx";
 
 const SIDE_LINKS = [
   { id: "announcements", label: "Announcements", icon: "✿", href: "/dashboard" },
@@ -335,6 +336,15 @@ export default function DashboardPage() {
             <button
               type="button"
               role="tab"
+              aria-selected={tab === "sports"}
+              className={tab === "sports" ? "dash-tab active" : "dash-tab"}
+              onClick={() => setTab("sports")}
+            >
+              ⚽ Sports
+            </button>
+            <button
+              type="button"
+              role="tab"
               aria-selected={tab === "settings"}
               className={tab === "settings" ? "dash-tab active" : "dash-tab"}
               onClick={() => setTab("settings")}
@@ -458,6 +468,8 @@ export default function DashboardPage() {
                 )}
               </article>
             </>
+          ) : tab === "sports" ? (
+            <SportsBoard user={user} />
           ) : (
             <>
               <div className="join-card dash-card-wide">

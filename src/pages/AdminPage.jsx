@@ -13,10 +13,12 @@ import {
   updateAnnouncement,
 } from "../services/announcementsService.js";
 import { createAdminUser, fetchAdminMe, fetchAdminUsers, updateAdminProfile } from "../services/adminService.js";
+import { createSportEvent, deleteSportEvent, fetchSportsMeta, listSportEvents, updateSportEvent } from "../services/sportsService.js";
 import { calcAge, displayAge } from "../utils/age.js";
 
 const TABS = [
   { id: "announcements", label: "Announcements", icon: "📢" },
+  { id: "sports", label: "Sports", icon: "⚽" },
   { id: "add-user", label: "Add User", icon: "＋" },
   { id: "profile", label: "Profile", icon: "❧" },
 ];
@@ -434,6 +436,229 @@ function AddUserTab() {
   );
 }
 
+function SportsTab() {
+  const [meta, setMeta] = useState({ sports: [], categories: [] });
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [venue, setVenue] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [sports, setSports] = useState([]);
+  const [status, setStatus] = useState("open");
+  const [editingId, setEditingId] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [msg, setMsg] = useState({ type: "", text: "" });
+  const [busy, setBusy] = useState(false);
+
+  async function refresh() {
+    setLoading(true);
+    const [m, e] = await Promise.all([fetchSportsMeta(), listSportEvents()]);
+    if (m.ok) setMeta({ sports: m.sports, categories: m.categories });
+    setEvents(e.events);
+    if (!category && m.categories.length > 0) setCategory(m.categories[0]);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  function toggleSport(id) {
+    setSports((prev) => (prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]));
+  }
+
+  function startEdit(ev) {
+    setEditingId(ev.id);
+    setTitle(ev.title || "");
+    setCategory(ev.category || meta.categories[0] || "");
+    setDescription(ev.description || "");
+    setVenue(ev.venue || "");
+    setEventDate(ev.eventDate || "");
+    setSports(Array.isArray(ev.sports) ? ev.sports : []);
+    setStatus(ev.status || "open");
+    setErrors({});
+    setMsg({ type: "", text: "" });
+    window.scrollTo(0, 0);
+  }
+
+  function resetForm() {
+    setEditingId(null);
+    setTitle("");
+    setCategory(meta.categories[0] || "");
+    setDescription("");
+    setVenue("");
+    setEventDate("");
+    setSports([]);
+    setStatus("open");
+    setErrors({});
+  }
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    setErrors({});
+    setMsg({ type: "", text: "" });
+    setBusy(true);
+    const payload = { title, category, description, venue, eventDate, sports, status };
+    const res = editingId ? await updateSportEvent(editingId, payload) : await createSportEvent(payload);
+    setBusy(false);
+    if (!res.ok) {
+      setErrors(res.errors || {});
+      setMsg({ type: "error", text: res.formError || "Could not save the event — check the fields." });
+      return;
+    }
+    setEvents((prev) => (editingId ? prev.map((x) => (x.id === editingId ? res.event : x)) : [res.event, ...prev]));
+    resetForm();
+    setMsg({ type: "success", text: editingId ? "Event updated ✓" : "Event launched — members see it on their Sports page ✓" });
+  }
+
+  async function onDelete(id) {
+    if (!window.confirm("Delete this event, its teams and all join requests?")) return;
+    const res = await deleteSportEvent(id);
+    if (!res.ok) {
+      setMsg({ type: "error", text: res.formError || "Could not delete the event." });
+      return;
+    }
+    setEvents((prev) => prev.filter((x) => x.id !== id));
+  }
+
+  async function onToggleStatus(ev) {
+    const res = await updateSportEvent(ev.id, { ...ev, status: ev.status === "open" ? "closed" : "open" });
+    if (res.ok) setEvents((prev) => prev.map((x) => (x.id === ev.id ? res.event : x)));
+  }
+
+  const sportName = (id) => (meta.sports.find((s) => s.id === id) || {}).name || id;
+
+  return (
+    <div className="admin-tab">
+      <div className="join-card admin-card">
+        <h3>{editingId ? "Edit sports event ✎" : "Launch a sports event ⚽"}</h3>
+        <p className="join-sub">Pick a category, write the details, tick the sports — it appears on the member Sports page instantly.</p>
+        {msg.text && (
+          <p className={msg.type === "success" ? "ev-success" : "ev-formerror"} role={msg.type === "success" ? "status" : "alert"}>
+            {msg.text}
+          </p>
+        )}
+        <form onSubmit={onSubmit} noValidate>
+          <label className="field auth-field" htmlFor="admin-ev-title">
+            <span className="auth-label">Event title</span>
+            <input id="admin-ev-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Monsoon Box Cricket League" maxLength={120} />
+            {errors.title && <span className="ev-error">{errors.title}</span>}
+          </label>
+          <div className="auth-row">
+            <label className="field auth-field" htmlFor="admin-ev-cat">
+              <span className="auth-label">Category</span>
+              <select id="admin-ev-cat" className="admin-select" value={category} onChange={(e) => setCategory(e.target.value)}>
+                {meta.categories.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              {errors.category && <span className="ev-error">{errors.category}</span>}
+            </label>
+            <label className="field auth-field" htmlFor="admin-ev-status">
+              <span className="auth-label">Status</span>
+              <select id="admin-ev-status" className="admin-select" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <option value="open">open — teams can form</option>
+                <option value="closed">closed — rosters frozen</option>
+              </select>
+              {errors.status && <span className="ev-error">{errors.status}</span>}
+            </label>
+          </div>
+          <div className="auth-row">
+            <label className="field auth-field" htmlFor="admin-ev-venue">
+              <span className="auth-label">Venue (optional)</span>
+              <input id="admin-ev-venue" type="text" value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="e.g. Floodlit box cage" maxLength={120} />
+            </label>
+            <label className="field auth-field" htmlFor="admin-ev-date">
+              <span className="auth-label">Date (optional)</span>
+              <input id="admin-ev-date" type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+            </label>
+          </div>
+          <label className="field auth-field" htmlFor="admin-ev-desc">
+            <span className="auth-label">Details for members</span>
+            <textarea id="admin-ev-desc" className="admin-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Format, entry, what to bring…" rows={3} maxLength={2000} />
+            {errors.description && <span className="ev-error">{errors.description}</span>}
+          </label>
+          <div className="field auth-field">
+            <span className="auth-label">Sports in this event</span>
+            <div className="maker-tags" role="group" aria-label="Sports in this event">
+              {meta.sports.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className={sports.includes(s.id) ? "dash-tag maker-tag active" : "dash-tag maker-tag"}
+                  onClick={() => toggleSport(s.id)}
+                  aria-pressed={sports.includes(s.id)}
+                  title={`${s.format} · squad ${s.min}–${s.max}`}
+                >
+                  {s.name} · {s.min}–{s.max}
+                </button>
+              ))}
+            </div>
+            {errors.sports && <span className="ev-error">{errors.sports}</span>}
+          </div>
+          <div className="dash-play-row">
+            <button className="btn btn-clay dash-btn" type="submit" disabled={busy}>
+              {busy ? "Saving…" : editingId ? "Save changes ✓" : "Launch event →"}
+            </button>
+            {editingId && (
+              <button type="button" className="btn btn-paper dash-btn" onClick={resetForm} disabled={busy}>
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      <div className="join-card admin-card">
+        <h3>Official events ({events.length})</h3>
+        <p className="join-sub">What members pick from. Closing freezes new teams; deleting wipes its teams too.</p>
+        {loading ? (
+          <p className="join-sub">Loading events…</p>
+        ) : events.length === 0 ? (
+          <div className="notice-empty">
+            <span className="notice-empty-leaf" aria-hidden="true">⚽</span>
+            <b>No events yet — launch the first one above.</b>
+            <p>Members see an empty Sports page until you do.</p>
+          </div>
+        ) : (
+          <ol className="notice-list">
+            {events.map((ev) => (
+              <li key={ev.id} className="notice-item">
+                <div className="notice-card">
+                  <div className="notice-top">
+                    <span className="notice-date">{ev.category}</span>
+                    <span className={ev.status === "open" ? "dash-tag" : "dash-tag admin-tag"}>
+                      {ev.status === "open" ? "● open" : "■ closed"}
+                    </span>
+                    {ev.eventDate && <span className="dash-tag">{ev.eventDate}</span>}
+                  </div>
+                  <b className="notice-title">{ev.title}</b>
+                  {ev.description && <p className="notice-body">{ev.description}</p>}
+                  {ev.venue && <small className="admin-item-meta">📍 {ev.venue}</small>}
+                  <div className="maker-tags">
+                    {(ev.sports || []).map((s) => (
+                      <span key={s} className="dash-tag">{sportName(s)}</span>
+                    ))}
+                  </div>
+                  <div className="dash-play-row">
+                    <button type="button" className="btn btn-paper dash-btn" onClick={() => startEdit(ev)}>Edit ✎</button>
+                    <button type="button" className="btn btn-paper dash-btn" onClick={() => onToggleStatus(ev)}>
+                      {ev.status === "open" ? "Close ■" : "Reopen ●"}
+                    </button>
+                    <button type="button" className="btn btn-paper dash-btn" onClick={() => onDelete(ev.id)}>Delete ✕</button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ProfileEditCard({ profile, onSaved }) {
   const [phone, setPhone] = useState(profile.phone || "");
   const [birthDate, setBirthDate] = useState(profile.birthDate || "");
@@ -742,6 +967,8 @@ export default function AdminPage({ user }) {
 
           {tab === "announcements" ? (
             <AnnouncementsTab />
+          ) : tab === "sports" ? (
+            <SportsTab />
           ) : tab === "add-user" ? (
             <AddUserTab />
           ) : (

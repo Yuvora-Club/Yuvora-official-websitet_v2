@@ -994,6 +994,55 @@ footer::before {
   border: 1.5px solid #2e352c;
 }
 .dash-link-admin:hover { background: #3d4a38; color: #fff; }
+
+/* ---------- sports arena (member Sports tab + admin maker) ---------- */
+.sport-pick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+.sport-pick {
+  display: grid; gap: 4px; justify-items: start; text-align: left;
+  background: #fbf6e9; border: 1.5px solid #e6dcc4; border-radius: 16px;
+  padding: 15px; cursor: pointer; font-family: inherit; color: var(--ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.sport-pick:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.sport-pick b { font-family: var(--display); font-size: 19px; letter-spacing: -0.01em; }
+.sport-pick small { color: var(--muted); font-weight: 600; font-size: 12.5px; }
+.team-list { display: grid; gap: 12px; margin-top: 14px; }
+.team-roster { display: flex; gap: 7px; flex-wrap: wrap; }
+.team-chip {
+  font-size: 12.5px; font-weight: 700;
+  background: var(--card); border: 1.5px solid #d9cdb4; border-radius: 999px;
+  padding: 5px 11px; color: var(--moss-deep);
+}
+.team-chip.captain { background: var(--moss-deep); border-color: var(--moss-deep); color: #eef2df; }
+.team-bar { height: 8px; border-radius: 999px; background: #e6dcc4; overflow: hidden; }
+.team-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--moss), var(--clay)); border-radius: 999px; }
+.team-reqs { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 8px; }
+.team-reqs li {
+  display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  background: var(--card); border: 1.5px dashed #d9cdb4; border-radius: 12px;
+  padding: 9px 11px; font-weight: 700; font-size: 14px;
+}
+.team-req-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.team-create {
+  margin-top: 14px;
+  background: #f6f1e2; border: 1.5px dashed #d9cdb4; border-radius: 16px;
+  padding: 14px; display: grid; gap: 6px;
+}
+.team-create b { font-family: var(--display); font-size: 18px; }
+.team-create-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.team-create-row input {
+  border: var(--line); border-radius: 12px; padding: 11px 13px;
+  font-family: var(--body); font-size: 14.5px; font-weight: 600;
+  background: #fffef8; color: var(--ink); outline: none; min-width: 0;
+}
+.team-create-row input:focus { border-color: var(--moss); box-shadow: 0 0 0 4px #e6efcf; }
+@media (max-width: 920px) {
+  .sport-pick-grid { grid-template-columns: 1fr 1fr; }
+  .team-create-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .sport-pick-grid { grid-template-columns: 1fr; }
+}
 .dash-facts { display: grid; gap: 10px; margin: 14px 0 0; }
 .dash-facts > div { display: flex; justify-content: space-between; gap: 12px; background: var(--mist); border-radius: 12px; padding: 9px 12px; font-size: 14px; }
 .dash-facts dt { font-weight: 800; color: var(--moss-deep); }
