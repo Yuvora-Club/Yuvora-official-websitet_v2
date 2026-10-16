@@ -1123,6 +1123,8 @@ footer::before {
   padding: 5px 11px;
 }
 .event-cta { justify-content: center; width: 100%; margin-top: 2px; }
+.result-event { margin-top: 14px; border-top: 1.5px dashed #d9cdb4; padding-top: 12px; display: grid; gap: 8px; }
+.result-sport { display: grid; gap: 8px; }
 @media (max-width: 920px) {
   .event-list { grid-template-columns: 1fr; }
   .event-title { font-size: 21px; }

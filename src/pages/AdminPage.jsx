@@ -13,12 +13,13 @@ import {
   updateAnnouncement,
 } from "../services/announcementsService.js";
 import { createAdminUser, fetchAdminMe, fetchAdminUsers, updateAdminProfile } from "../services/adminService.js";
-import { createSportEvent, deleteSportEvent, fetchSportsMeta, listSportEvents, updateSportEvent } from "../services/sportsService.js";
+import { createSportEvent, deleteSportEvent, fetchSportsMeta, fetchTeamRequests, listSportEvents, listTeams, updateSportEvent } from "../services/sportsService.js";
 import { calcAge, displayAge } from "../utils/age.js";
 
 const TABS = [
   { id: "announcements", label: "Announcements", icon: "📢" },
   { id: "sports", label: "Sports", icon: "⚽" },
+  { id: "results", label: "Results", icon: "🏆" },
   { id: "add-user", label: "Add User", icon: "＋" },
   { id: "profile", label: "Profile", icon: "❧" },
 ];
@@ -665,6 +666,154 @@ function SportsTab() {
   );
 }
 
+function ResultsTab() {
+  const [loading, setLoading] = useState(true);
+  const [members, setMembers] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [meta, setMeta] = useState({ sports: [] });
+  const [rosters, setRosters] = useState({});
+  const [formError, setFormError] = useState("");
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setLoading(true);
+      const [m, e, u] = await Promise.all([fetchSportsMeta(), listSportEvents(), fetchAdminUsers()]);
+      if (!alive) return;
+      if (m.ok) setMeta({ sports: m.sports });
+      setEvents(e.events);
+      if (u.ok) setMembers(u.users);
+      else setFormError(u.formError || "Could not load registrations.");
+      // Every event × sport: teams + their pending requests (admin sees all).
+      const agg = {};
+      for (const ev of e.events) {
+        agg[ev.id] = {};
+        for (const sid of ev.sports || []) {
+          const t = await listTeams(ev.id, sid);
+          if (!t.ok || !alive) continue;
+          const withReqs = [];
+          for (const team of t.teams) {
+            const r = await fetchTeamRequests(team.id);
+            withReqs.push({ ...team, pendingReqs: r.ok ? r.requests : [] });
+            if (!alive) return;
+          }
+          agg[ev.id][sid] = withReqs;
+        }
+      }
+      if (alive) {
+        setRosters(agg);
+        setLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const sportName = (id) => (meta.sports.find((s) => s.id === id) || {}).name || id;
+  const allTeams = Object.values(rosters).flatMap((bySport) => Object.values(bySport).flat());
+  const totalPlayers = allTeams.reduce((n, t) => n + (t.members ? t.members.length : 0), 0);
+  const totalPending = allTeams.reduce((n, t) => n + (t.pendingReqs ? t.pendingReqs.length : 0), 0);
+
+  return (
+    <div className="admin-tab">
+      <div className="join-card admin-card">
+        <h3>Registrations & results 🏆</h3>
+        <p className="join-sub">Everyone who registered, and every roster they landed in.</p>
+        {formError && (
+          <p className="ev-formerror" role="alert">
+            {formError} <a href="/login?next=%2Fadmin">Log in again →</a>
+          </p>
+        )}
+        {loading ? (
+          <p className="join-sub">Gathering the registers…</p>
+        ) : (
+          <>
+            <div className="maker-tags" aria-label="Totals">
+              <span className="dash-tag">❧ {members.length} registered</span>
+              <span className="dash-tag">⚽ {events.length} events</span>
+              <span className="dash-tag">★ {allTeams.length} teams</span>
+              <span className="dash-tag">● {totalPlayers} players in</span>
+              <span className="dash-tag">… {totalPending} awaiting captain</span>
+            </div>
+
+            <p className="join-group-title">❧ registered people</p>
+            {members.length === 0 ? (
+              <p className="join-sub">Nobody yet.</p>
+            ) : (
+              <ul className="admin-list">
+                {members.map((u) => (
+                  <li key={u.id} className="admin-item admin-user">
+                    <div className="admin-item-top">
+                      <b>{u.fullName || "—"}</b>
+                      <span className={u.role === "admin" ? "dash-tag admin-tag" : "dash-tag"}>{u.role === "admin" ? "★ admin" : "member"}</span>
+                    </div>
+                    <small className="admin-item-meta">
+                      {u.email || "—"} · {u.phone || "no phone"} · age {displayAge(u) ?? "—"}
+                      {u.createdAt ? ` · joined ${new Date(u.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}` : ""}
+                    </small>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <p className="join-group-title">❧ event-wise rosters</p>
+            {events.length === 0 ? (
+              <p className="join-sub">No events launched yet.</p>
+            ) : (
+              events.map((ev) => (
+                <div key={ev.id} className="result-event">
+                  <div className="admin-item-top">
+                    <b>{ev.title}</b>
+                    <span className={ev.status === "open" ? "dash-tag" : "dash-tag admin-tag"}>
+                      {ev.status === "open" ? "● open" : "■ closed"}
+                    </span>
+                  </div>
+                  {(ev.sports || []).map((sid) => {
+                    const teams = (rosters[ev.id] && rosters[ev.id][sid]) || [];
+                    return (
+                      <div key={sid} className="result-sport">
+                        <p className="join-group-title">— {sportName(sid)} · {teams.length} team{teams.length === 1 ? "" : "s"}</p>
+                        {teams.length === 0 ? (
+                          <p className="join-sub">No teams yet.</p>
+                        ) : (
+                          teams.map((t) => (
+                            <div key={t.id} className="notice-card">
+                              <div className="notice-top">
+                                <b className="notice-title">{t.name}</b>
+                                <span className={t.status === "locked" ? "dash-tag admin-tag" : "dash-tag"}>
+                                  {t.status === "locked" ? "■ locked" : `● ${t.count}/${t.maxPlayers}`}
+                                </span>
+                              </div>
+                              <small className="admin-item-meta">captain {t.captainName}</small>
+                              <div className="team-roster">
+                                {(t.members || []).map((m) => (
+                                  <span key={m.uid} className={m.uid === t.captainUid ? "team-chip captain" : "team-chip"}>
+                                    {m.uid === t.captainUid ? "★ " : ""}{m.name}
+                                  </span>
+                                ))}
+                              </div>
+                              {t.pendingReqs && t.pendingReqs.length > 0 && (
+                                <small className="admin-item-meta">
+                                  …awaiting captain: {t.pendingReqs.map((r) => r.name).join(", ")}
+                                </small>
+                              )}
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ProfileEditCard({ profile, onSaved }) {
   const [phone, setPhone] = useState(profile.phone || "");
   const [birthDate, setBirthDate] = useState(profile.birthDate || "");
@@ -975,6 +1124,8 @@ export default function AdminPage({ user }) {
             <AnnouncementsTab />
           ) : tab === "sports" ? (
             <SportsTab />
+          ) : tab === "results" ? (
+            <ResultsTab />
           ) : tab === "add-user" ? (
             <AddUserTab />
           ) : (
