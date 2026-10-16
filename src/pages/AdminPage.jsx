@@ -236,10 +236,11 @@ function AnnouncementsTab() {
             <p>Nothing shows on the member dashboard until you do.</p>
           </div>
         ) : (
-          <ol className="notice-list">
-            {items.map((a) => (
-              <li key={a.id} className="notice-item">
-                <div className="notice-card">
+          <div className="pinned-list">
+            {items.map((a, i) => (
+              <article key={a.id} className="pinned-card">
+                <span className="pinned-num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                <div className="pinned-main">
                   {editingId === a.id ? (
                     <div className="admin-edit">
                       <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} maxLength={120} aria-label="Edit title" />
@@ -268,14 +269,14 @@ function AnnouncementsTab() {
                     </div>
                   ) : (
                     <>
-                      <div className="notice-top">
-                        <time className="notice-date" dateTime={a.createdAt}>
+                      <div className="pinned-top">
+                        {a.tag && <span className="event-sport">{a.tag}</span>}
+                        <time className="pinned-date" dateTime={a.createdAt}>
                           {formatDate(a.createdAt)}
                         </time>
-                        {a.tag && <span className="dash-tag">{a.tag}</span>}
                       </div>
-                      <b className="notice-title">{a.title}</b>
-                      <p className="notice-body">{a.body}</p>
+                      <h4 className="pinned-title">{a.title}</h4>
+                      <p className="pinned-body">{a.body}</p>
                       {a.updatedAt && a.updatedAt !== a.createdAt && (
                         <small className="admin-item-meta">edited {formatDate(a.updatedAt)}</small>
                       )}
@@ -290,9 +291,9 @@ function AnnouncementsTab() {
                     </>
                   )}
                 </div>
-              </li>
+              </article>
             ))}
-          </ol>
+          </div>
         )}
       </div>
     </div>

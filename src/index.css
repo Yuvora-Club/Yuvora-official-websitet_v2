@@ -1125,6 +1125,48 @@ footer::before {
 .event-cta { justify-content: center; width: 100%; margin-top: 2px; }
 .result-event { margin-top: 14px; border-top: 1.5px dashed #d9cdb4; padding-top: 12px; display: grid; gap: 8px; }
 .result-sport { display: grid; gap: 8px; }
+
+/* ---------- pinned board (admin announcements list) ---------- */
+.pinned-list { display: grid; gap: 12px; margin-top: 14px; }
+.pinned-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  background: var(--card);
+  border: var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px 14px 8px;
+  overflow: hidden;
+}
+.pinned-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 6px;
+  background: linear-gradient(180deg, var(--clay), var(--sun-soft));
+}
+.pinned-num {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 30px;
+  letter-spacing: -0.03em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px #d9cdb4;
+  padding: 0 4px 0 16px;
+  line-height: 1;
+  user-select: none;
+}
+.pinned-main { display: grid; gap: 7px; align-content: start; min-width: 0; }
+.pinned-top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.pinned-date { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+.pinned-title { font-family: var(--display); font-size: 21px; letter-spacing: -0.01em; line-height: 1.2; margin: 0; }
+.pinned-body { margin: 0; color: #4c5648; font-weight: 500; line-height: 1.7; font-size: 14px; white-space: pre-wrap; }
+@media (max-width: 560px) {
+  .pinned-card { grid-template-columns: 1fr; gap: 6px; padding-left: 16px; }
+  .pinned-num { font-size: 22px; padding: 0; }
+}
 @media (max-width: 920px) {
   .event-list { grid-template-columns: 1fr; }
   .event-title { font-size: 21px; }
