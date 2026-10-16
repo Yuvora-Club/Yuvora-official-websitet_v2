@@ -988,6 +988,12 @@ footer::before {
 .dash-link { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-radius: 12px; font-weight: 800; font-size: 14.5px; color: var(--moss-deep); }
 .dash-link:hover { background: var(--mist); }
 .dash-link.active { background: var(--moss-deep); color: #f4efe0; }
+.dash-link-admin {
+  background: linear-gradient(180deg, #2e352c, #3d4a38);
+  color: #f6e3b4;
+  border: 1.5px solid #2e352c;
+}
+.dash-link-admin:hover { background: #3d4a38; color: #fff; }
 .dash-facts { display: grid; gap: 10px; margin: 14px 0 0; }
 .dash-facts > div { display: flex; justify-content: space-between; gap: 12px; background: var(--mist); border-radius: 12px; padding: 9px 12px; font-size: 14px; }
 .dash-facts dt { font-weight: 800; color: var(--moss-deep); }

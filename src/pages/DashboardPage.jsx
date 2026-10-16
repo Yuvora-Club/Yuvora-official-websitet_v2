@@ -295,7 +295,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <nav>
+          <nav aria-label="Dashboard sections">
             {SIDE_LINKS.map((l) => (
               <a
                 key={l.id}
@@ -309,6 +309,12 @@ export default function DashboardPage() {
                 {l.label}
               </a>
             ))}
+            {isAdminUser(user) && (
+              <a href="/admin" className="dash-link dash-link-admin">
+                <span aria-hidden="true">★</span>
+                Back to admin
+              </a>
+            )}
           </nav>
           <button className="btn btn-paper" type="button" onClick={onLogout}>
             Log out
