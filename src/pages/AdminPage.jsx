@@ -21,6 +21,8 @@ const TABS = [
   { id: "profile", label: "Profile", icon: "❧" },
 ];
 
+const TAG_PRESETS = ["Play", "Build", "Gather", "Summit", "Music", "Urgent"];
+
 function formatDate(iso) {
   if (!iso) return "—";
   try {
@@ -125,113 +127,169 @@ function AnnouncementsTab() {
     }
   }
 
+  const previewReady = title.trim().length >= 3 && body.trim().length >= 3;
+
   return (
     <div className="admin-tab">
       <div className="join-card admin-card">
-        <h3>Post an announcement 📢</h3>
-        <p className="join-sub">Publishes instantly to the member dashboard (/dashboard) for every signed-in member.</p>
+        <h3>Announcement maker ✿</h3>
+        <p className="join-sub">Compose on the left, watch exactly what members will see on the right — then pin it to the board.</p>
         {formError && (
           <p className="ev-formerror" role="alert">
             {formError}
           </p>
         )}
-        <form onSubmit={onPost} noValidate>
-          <label className="field auth-field" htmlFor="admin-ann-title">
-            <span className="auth-label">Title</span>
-            <input
-              id="admin-ann-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Box cricket finals under lights"
-              maxLength={120}
-            />
-            {fieldErrors.title && <span className="ev-error">{fieldErrors.title}</span>}
-          </label>
-          <label className="field auth-field" htmlFor="admin-ann-tag">
-            <span className="auth-label">Tag (optional)</span>
-            <input
-              id="admin-ann-tag"
-              type="text"
-              value={tag}
-              onChange={(e) => setTag(e.target.value)}
-              placeholder="e.g. Play · Build · Gather"
-              maxLength={40}
-            />
-          </label>
-          <label className="field auth-field" htmlFor="admin-ann-body">
-            <span className="auth-label">Message</span>
-            <textarea
-              id="admin-ann-body"
-              className="admin-textarea"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="What should every member know?"
-              rows={4}
-              maxLength={2000}
-            />
-            {fieldErrors.body && <span className="ev-error">{fieldErrors.body}</span>}
-          </label>
-          <div className="dash-play-row">
-            <button className="btn btn-clay dash-btn" type="submit" disabled={busy}>
-              {busy ? "Posting…" : "Post announcement →"}
-            </button>
+        <div className="maker-grid">
+          <form onSubmit={onPost} noValidate className="maker-form">
+            <label className="field auth-field" htmlFor="admin-ann-title">
+              <span className="auth-label">Title · {title.length}/120</span>
+              <input
+                id="admin-ann-title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Box cricket finals under lights"
+                maxLength={120}
+              />
+              {fieldErrors.title && <span className="ev-error">{fieldErrors.title}</span>}
+            </label>
+            <div className="field auth-field">
+              <span className="auth-label" id="admin-ann-tag-label">Tag · pick one</span>
+              <div className="maker-tags" role="group" aria-labelledby="admin-ann-tag-label">
+                {TAG_PRESETS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className={tag === t ? "dash-tag maker-tag active" : "dash-tag maker-tag"}
+                    onClick={() => setTag((prev) => (prev === t ? "" : t))}
+                    aria-pressed={tag === t}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <label className="field auth-field" htmlFor="admin-ann-body">
+              <span className="auth-label">Message · {body.length}/2000</span>
+              <textarea
+                id="admin-ann-body"
+                className="admin-textarea"
+                value={body}
+                onChange={(e) => setBody(e.target.value)}
+                placeholder="What should every member know? Date, venue, what to bring…"
+                rows={5}
+                maxLength={2000}
+              />
+              {fieldErrors.body && <span className="ev-error">{fieldErrors.body}</span>}
+            </label>
+            <div className="dash-play-row">
+              <button className="btn btn-clay dash-btn" type="submit" disabled={busy || !previewReady}>
+                {busy ? "Pinning…" : "Pin to board →"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-paper dash-btn"
+                disabled={busy || (!title && !body && !tag)}
+                onClick={() => {
+                  setTitle("");
+                  setBody("");
+                  setTag("");
+                  setFieldErrors({});
+                  setFormError("");
+                }}
+              >
+                Clear ↻
+              </button>
+            </div>
+          </form>
+          <div className="maker-preview" aria-label="Live preview">
+            <span className="dash-mini-title">live preview · member view</span>
+            <div className="notice-card maker-preview-card">
+              <div className="notice-top">
+                <time className="notice-date">
+                  {new Date().toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}
+                </time>
+                {tag && <span className="dash-tag">{tag}</span>}
+              </div>
+              <b className="notice-title">{title.trim() || "Your title appears here"}</b>
+              <p className="notice-body">{body.trim() || "Your message appears here, exactly as members will read it — one card, stacked newest-first on their board."}</p>
+            </div>
+            {!previewReady && (
+              <p className="join-sub">Keep typing — the pin button unlocks once title + message are set.</p>
+            )}
           </div>
-        </form>
+        </div>
       </div>
 
       <div className="join-card admin-card">
-        <h3>Live board ({items.length})</h3>
-        <p className="join-sub">Exactly what members see on their dashboard. Edit or remove any post.</p>
+        <h3>Pinned board ({items.length})</h3>
+        <p className="join-sub">Newest first — exactly the member order. Edit or unpin any notice.</p>
         {loading ? (
           <p className="join-sub">Loading announcements…</p>
         ) : items.length === 0 ? (
-          <div className="note-bar dash-note">
-            <b>QUIET GROVE →</b>
-            <span>No announcements yet. Post the first one above — it will sprout on /dashboard.</span>
+          <div className="notice-empty">
+            <span className="notice-empty-leaf" aria-hidden="true">❧</span>
+            <b>Board is empty — pin the first notice above.</b>
+            <p>Nothing shows on the member dashboard until you do.</p>
           </div>
         ) : (
-          <ul className="admin-list">
+          <ol className="notice-list">
             {items.map((a) => (
-              <li key={a.id} className="admin-item">
-                {editingId === a.id ? (
-                  <div className="admin-edit">
-                    <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} maxLength={120} aria-label="Edit title" />
-                    <input value={editTag} onChange={(e) => setEditTag(e.target.value)} maxLength={40} placeholder="Tag (optional)" aria-label="Edit tag" />
-                    <textarea value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={3} maxLength={2000} aria-label="Edit message" />
-                    <div className="dash-play-row">
-                      <button type="button" className="btn btn-clay dash-btn" onClick={() => onSaveEdit(a.id)} disabled={busy}>
-                        Save ✓
-                      </button>
-                      <button type="button" className="btn btn-paper dash-btn" onClick={() => setEditingId(null)} disabled={busy}>
-                        Cancel
-                      </button>
+              <li key={a.id} className="notice-item">
+                <div className="notice-card">
+                  {editingId === a.id ? (
+                    <div className="admin-edit">
+                      <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} maxLength={120} aria-label="Edit title" />
+                      <div className="maker-tags" role="group" aria-label="Edit tag">
+                        {TAG_PRESETS.map((t) => (
+                          <button
+                            key={t}
+                            type="button"
+                            className={editTag === t ? "dash-tag maker-tag active" : "dash-tag maker-tag"}
+                            onClick={() => setEditTag((prev) => (prev === t ? "" : t))}
+                            aria-pressed={editTag === t}
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                      <textarea value={editBody} onChange={(e) => setEditBody(e.target.value)} rows={3} maxLength={2000} aria-label="Edit message" />
+                      <div className="dash-play-row">
+                        <button type="button" className="btn btn-clay dash-btn" onClick={() => onSaveEdit(a.id)} disabled={busy}>
+                          Save ✓
+                        </button>
+                        <button type="button" className="btn btn-paper dash-btn" onClick={() => setEditingId(null)} disabled={busy}>
+                          Cancel
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <>
-                    <div className="admin-item-top">
-                      <b>{a.title}</b>
-                      {a.tag && <span className="dash-tag">{a.tag}</span>}
-                    </div>
-                    <p className="admin-item-body">{a.body}</p>
-                    <small className="admin-item-meta">
-                      {formatDate(a.createdAt)}
-                      {a.updatedAt && a.updatedAt !== a.createdAt ? ` · edited ${formatDate(a.updatedAt)}` : ""}
-                    </small>
-                    <div className="dash-play-row">
-                      <button type="button" className="btn btn-paper dash-btn" onClick={() => startEdit(a)}>
-                        Edit ✎
-                      </button>
-                      <button type="button" className="btn btn-paper dash-btn" onClick={() => onDelete(a.id)} disabled={busy}>
-                        Delete ✕
-                      </button>
-                    </div>
-                  </>
-                )}
+                  ) : (
+                    <>
+                      <div className="notice-top">
+                        <time className="notice-date" dateTime={a.createdAt}>
+                          {formatDate(a.createdAt)}
+                        </time>
+                        {a.tag && <span className="dash-tag">{a.tag}</span>}
+                      </div>
+                      <b className="notice-title">{a.title}</b>
+                      <p className="notice-body">{a.body}</p>
+                      {a.updatedAt && a.updatedAt !== a.createdAt && (
+                        <small className="admin-item-meta">edited {formatDate(a.updatedAt)}</small>
+                      )}
+                      <div className="dash-play-row">
+                        <button type="button" className="btn btn-paper dash-btn" onClick={() => startEdit(a)}>
+                          Edit ✎
+                        </button>
+                        <button type="button" className="btn btn-paper dash-btn" onClick={() => onDelete(a.id)} disabled={busy}>
+                          Unpin ✕
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               </li>
             ))}
-          </ul>
+          </ol>
         )}
       </div>
     </div>

@@ -1977,3 +1977,92 @@ footer::before {
   .admin-profile-top { align-items: flex-start; }
   .admin-name { font-size: 24px; }
 }
+
+/* ---------- notice board (member dashboard, announcements only) ---------- */
+.notice-admin-bar {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  background: linear-gradient(180deg, #2e352c, #3d4a38);
+  color: #ece7d3;
+  border: 1.5px solid #2e352c;
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+  padding: 14px 16px;
+}
+.notice-admin-bar > span { font-size: 20px; color: var(--sun-soft); }
+.notice-admin-bar p { margin: 0; flex: 1 1 220px; font-size: 14px; font-weight: 500; line-height: 1.6; color: #d8d3bd; }
+.notice-admin-bar p b { color: #fff; }
+.notice-admin-bar .btn-ink { border-color: #f6e3b4; }
+.notice-board {
+  background: var(--card);
+  border: var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 22px 20px;
+}
+.notice-head { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; margin-bottom: 6px; }
+.notice-head h3 { font-family: var(--display); font-size: 26px; margin: 8px 0 2px; letter-spacing: -0.02em; }
+.notice-count {
+  min-width: 44px; height: 44px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--moss-deep); color: #eef2df;
+  font-family: var(--display); font-weight: 800; font-size: 18px;
+  border: 1.5px solid var(--moss-deep);
+  flex-shrink: 0;
+}
+.notice-empty {
+  margin-top: 14px;
+  border: 1.5px dashed #d9cdb4;
+  border-radius: 16px;
+  background: #fbf6e9;
+  padding: 26px 20px;
+  text-align: center;
+}
+.notice-empty-leaf { font-size: 30px; opacity: 0.5; }
+.notice-empty b { display: block; font-family: var(--display); font-size: 19px; margin-top: 6px; }
+.notice-empty p { margin: 6px 0 0; color: var(--muted); font-weight: 500; font-size: 14px; }
+.notice-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 0; }
+.notice-item { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: stretch; }
+.notice-rail { display: flex; flex-direction: column; align-items: center; padding-top: 20px; }
+.notice-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--clay); border: 2.5px solid #f6e3b4; box-shadow: 0 0 0 1.5px var(--clay); flex-shrink: 0; }
+.notice-line { width: 2px; flex: 1; min-height: 18px; background: repeating-linear-gradient(180deg, #d9cdb4 0 5px, transparent 5px 10px); margin-top: 4px; }
+.notice-card {
+  background: #fbf6e9;
+  border: 1.5px solid #e6dcc4;
+  border-radius: 16px;
+  padding: 15px 16px;
+  margin-bottom: 12px;
+  display: grid;
+  gap: 7px;
+  align-content: start;
+}
+.notice-item:last-child .notice-card { margin-bottom: 0; }
+.notice-top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.notice-date { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--clay); }
+.notice-title { font-family: var(--display); font-size: 20px; letter-spacing: -0.01em; line-height: 1.25; }
+.notice-body { margin: 0; color: #4c5648; font-weight: 500; line-height: 1.7; font-size: 14.5px; white-space: pre-wrap; }
+
+/* ---------- announcement maker (admin portal) ---------- */
+.maker-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 18px; align-items: start; margin-top: 14px; }
+.maker-form { display: grid; gap: 2px; align-content: start; min-width: 0; }
+.maker-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.maker-tag { cursor: pointer; background: var(--card); transition: transform 0.15s ease; }
+.maker-tag:hover { transform: translateY(-1px); }
+.maker-tag.active { background: var(--moss-deep); color: #eef2df; border-color: var(--moss-deep); }
+.maker-preview {
+  background: #f6f1e2;
+  border: 1.5px dashed #d9cdb4;
+  border-radius: 16px;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  position: sticky;
+  top: 12px;
+}
+.maker-preview-card { margin-bottom: 0; background: var(--card); }
+@media (max-width: 920px) {
+  .maker-grid { grid-template-columns: 1fr; }
+  .maker-preview { position: static; }
+  .notice-item { grid-template-columns: 20px 1fr; }
+}

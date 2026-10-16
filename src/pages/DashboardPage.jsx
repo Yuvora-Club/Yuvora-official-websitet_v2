@@ -5,11 +5,10 @@
 // localStorage-only play — no backend calls.
 
 import { useEffect, useMemo, useState } from "react";
-import { logout } from "../services/authService.js";
+import { isAdminUser, logout } from "../services/authService.js";
 import { navigate } from "../services/router.js";
 import { useAuth } from "../state/useAuth.js";
 import { listAnnouncements } from "../services/announcementsService.js";
-import GroveApply from "../components/GroveApply.jsx";
 
 const SIDE_LINKS = [
   { id: "announcements", label: "Announcements", icon: "✿", href: "/dashboard" },
@@ -340,6 +339,17 @@ export default function DashboardPage() {
 
           {tab === "grove" ? (
             <>
+              {isAdminUser(user) && (
+                <div className="notice-admin-bar">
+                  <span aria-hidden="true">★</span>
+                  <p>
+                    You&apos;re signed in as an <b>admin</b> — post and manage board notices in the greenhouse.
+                  </p>
+                  <a className="btn btn-ink dash-btn" href="/admin">
+                    Open admin panel →
+                  </a>
+                </div>
+              )}
               <div className="dash-grid">
                 <article className="dash-card dash-pass">
                   <span className="dash-sticker" aria-hidden="true">seed pass ✿</span>
@@ -393,46 +403,54 @@ export default function DashboardPage() {
                 </article>
               </div>
 
-              <div className="join-card dash-card-wide">
-                <h3>Announcements 📢</h3>
-                <p className="join-sub">
-                  Fresh from the crew — check back often.
-                </p>
+              <article className="notice-board" aria-live="polite">
+                <div className="notice-head">
+                  <div>
+                    <span className="dash-sticker" aria-hidden="true">📢 notice board</span>
+                    <h3>Announcements</h3>
+                    <p className="join-sub">One after another, newest first — straight from the crew.</p>
+                  </div>
+                  <span className="notice-count" aria-label={`${announcements.length} announcements`}>
+                    {annLoading ? "…" : announcements.length}
+                  </span>
+                </div>
                 {annLoading ? (
-                  <p className="join-sub">Listening to the notice board…</p>
+                  <p className="join-sub">Pinning fresh notices…</p>
                 ) : announcements.length === 0 ? (
-                  <div className="note-bar dash-note">
-                    <b>QUIET GROVE →</b>
-                    <span>
-                      No announcements yet. When the crew posts one, it will sprout
-                      here.
-                    </span>
+                  <div className="notice-empty">
+                    <span className="notice-empty-leaf" aria-hidden="true">❧</span>
+                    <b>Quiet grove — nothing pinned yet.</b>
+                    <p>When the crew posts a notice, it appears here in order.</p>
                   </div>
                 ) : (
-                  <ul className="admin-list dash-ann-list">
-                    {announcements.map((a) => (
-                      <li key={a.id} className="admin-item">
-                        <div className="admin-item-top">
-                          <b>{a.title}</b>
-                          {a.tag && <span className="dash-tag">{a.tag}</span>}
+                  <ol className="notice-list">
+                    {announcements.map((a, i) => (
+                      <li key={a.id} className="notice-item">
+                        <span className="notice-rail" aria-hidden="true">
+                          <i className="notice-dot" />
+                          {i < announcements.length - 1 && <i className="notice-line" />}
+                        </span>
+                        <div className="notice-card">
+                          <div className="notice-top">
+                            {a.createdAt && (
+                              <time className="notice-date" dateTime={a.createdAt}>
+                                {new Date(a.createdAt).toLocaleDateString(undefined, {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                })}
+                              </time>
+                            )}
+                            {a.tag && <span className="dash-tag">{a.tag}</span>}
+                          </div>
+                          <b className="notice-title">{a.title}</b>
+                          <p className="notice-body">{a.body}</p>
                         </div>
-                        <p className="admin-item-body">{a.body}</p>
-                        {a.createdAt && (
-                          <small className="admin-item-meta">
-                            {new Date(a.createdAt).toLocaleDateString(undefined, {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </small>
-                        )}
                       </li>
                     ))}
-                  </ul>
+                  </ol>
                 )}
-              </div>
-
-              <GroveApply user={user} />
+              </article>
             </>
           ) : (
             <>

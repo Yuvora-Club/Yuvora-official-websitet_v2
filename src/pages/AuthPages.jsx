@@ -4,7 +4,7 @@
 // requestPasswordReset) are intentionally untouched.
 
 import { useState } from "react";
-import { AUTH_MODE_NOTICE, loginLive, register, requestPasswordReset } from "../services/authService.js";
+import { AUTH_MODE_NOTICE, isAdminUser, loginLive, register, requestPasswordReset } from "../services/authService.js";
 import { navigate } from "../services/router.js";
 import { DemoNotice, FieldError } from "../components/eventBits.jsx";
 
@@ -38,8 +38,12 @@ function PasswordField({ id, label, value, onChange, error, describedBy }) {
   );
 }
 
-function nextPath(next) {
-  return next && next.startsWith("/") ? next : "/dashboard";
+function nextPath(next, user) {
+  // Explicit ?next= always wins (e.g. /login?next=%2Fadmin from a gate).
+  if (next && next.startsWith("/")) return next;
+  // Admins land in the admin greenhouse, members in their dashboard.
+  if (isAdminUser(user)) return "/admin";
+  return "/dashboard";
 }
 
 export function LoginPage({ next }) {
@@ -66,7 +70,7 @@ export function LoginPage({ next }) {
     }
     setErrors({});
     setDone(true);
-    setTimeout(() => navigate(nextPath(next)), 650);
+    setTimeout(() => navigate(nextPath(next, res.user)), 650);
   }
 
   async function onForgotPassword() {
