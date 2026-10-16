@@ -4,7 +4,7 @@
 // /api/announcements, which the member dashboard (/dashboard) renders live.
 
 import { useEffect, useState } from "react";
-import { getLiveSession, isAdminUser, logout } from "../services/authService.js";
+import { getLiveSession, isAdminUser, logout, patchLiveSessionUser } from "../services/authService.js";
 import { navigate } from "../services/router.js";
 import {
   createAnnouncement,
@@ -12,7 +12,7 @@ import {
   listAnnouncements,
   updateAnnouncement,
 } from "../services/announcementsService.js";
-import { createAdminUser, fetchAdminMe, fetchAdminUsers } from "../services/adminService.js";
+import { createAdminUser, fetchAdminMe, fetchAdminUsers, updateAdminEmail, updateAdminPassword } from "../services/adminService.js";
 import { calcAge, displayAge } from "../utils/age.js";
 
 const TABS = [
@@ -434,6 +434,124 @@ function AddUserTab() {
   );
 }
 
+function CredentialsCard({ currentEmail, onEmailChanged }) {
+  const [newEmail, setNewEmail] = useState("");
+  const [emailPassword, setEmailPassword] = useState("");
+  const [emailErrors, setEmailErrors] = useState({});
+  const [emailMsg, setEmailMsg] = useState({ type: "", text: "" });
+  const [emailBusy, setEmailBusy] = useState(false);
+  const [curPass, setCurPass] = useState("");
+  const [newPass, setNewPass] = useState("");
+  const [confirmPass, setConfirmPass] = useState("");
+  const [passErrors, setPassErrors] = useState({});
+  const [passMsg, setPassMsg] = useState({ type: "", text: "" });
+  const [passBusy, setPassBusy] = useState(false);
+
+  async function onEmailSubmit(e) {
+    e.preventDefault();
+    setEmailErrors({});
+    setEmailMsg({ type: "", text: "" });
+    setEmailBusy(true);
+    const res = await updateAdminEmail({ newEmail, password: emailPassword });
+    setEmailBusy(false);
+    if (!res.ok) {
+      setEmailErrors(res.errors || {});
+      setEmailMsg({ type: "error", text: res.formError || "Could not change the email — check the fields." });
+      return;
+    }
+    patchLiveSessionUser({ email: res.admin.email, fullName: res.admin.fullName });
+    onEmailChanged(res.admin);
+    setNewEmail("");
+    setEmailPassword("");
+    setEmailMsg({ type: "success", text: `Login email is now ${res.admin.email}. Use it next time you sign in.` });
+  }
+
+  async function onPasswordSubmit(e) {
+    e.preventDefault();
+    setPassErrors({});
+    setPassMsg({ type: "", text: "" });
+    if (newPass !== confirmPass) {
+      setPassErrors({ confirm: "New passwords don't match yet." });
+      return;
+    }
+    setPassBusy(true);
+    const res = await updateAdminPassword({ currentPassword: curPass, newPassword: newPass });
+    setPassBusy(false);
+    if (!res.ok) {
+      setPassErrors(res.errors || {});
+      setPassMsg({ type: "error", text: res.formError || "Could not change the password — check the fields." });
+      return;
+    }
+    setPassMsg({ type: "success", text: "Password changed — signing you out. Log in again with the new one." });
+    setTimeout(() => {
+      logout();
+      navigate("/login?next=%2Fadmin");
+    }, 1200);
+  }
+
+  return (
+    <div className="join-card admin-card">
+      <h3>Login credentials 🔐</h3>
+      <p className="join-sub">
+        Change the email + password you sign in with. Current password is required for both — a leftover session alone can't do this.
+      </p>
+      <div className="maker-grid">
+        <form onSubmit={onEmailSubmit} noValidate className="maker-form">
+          <p className="join-group-title">❧ change email · now {currentEmail || "—"}</p>
+          {emailMsg.text && (
+            <p className={emailMsg.type === "success" ? "ev-success" : "ev-formerror"} role={emailMsg.type === "success" ? "status" : "alert"}>
+              {emailMsg.text}
+            </p>
+          )}
+          <label className="field auth-field" htmlFor="admin-cred-email">
+            <span className="auth-label">New email</span>
+            <input id="admin-cred-email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="you@newmail.com" autoComplete="off" />
+            {emailErrors.newEmail && <span className="ev-error">{emailErrors.newEmail}</span>}
+          </label>
+          <label className="field auth-field" htmlFor="admin-cred-email-pass">
+            <span className="auth-label">Current password</span>
+            <input id="admin-cred-email-pass" type="password" value={emailPassword} onChange={(e) => setEmailPassword(e.target.value)} placeholder="prove it's you" autoComplete="current-password" />
+            {emailErrors.password && <span className="ev-error">{emailErrors.password}</span>}
+          </label>
+          <div className="dash-play-row">
+            <button className="btn btn-clay dash-btn" type="submit" disabled={emailBusy}>
+              {emailBusy ? "Saving…" : "Change email →"}
+            </button>
+          </div>
+        </form>
+        <form onSubmit={onPasswordSubmit} noValidate className="maker-form">
+          <p className="join-group-title">❧ change password</p>
+          {passMsg.text && (
+            <p className={passMsg.type === "success" ? "ev-success" : "ev-formerror"} role={passMsg.type === "success" ? "status" : "alert"}>
+              {passMsg.text}
+            </p>
+          )}
+          <label className="field auth-field" htmlFor="admin-cred-cur">
+            <span className="auth-label">Current password</span>
+            <input id="admin-cred-cur" type="password" value={curPass} onChange={(e) => setCurPass(e.target.value)} placeholder="current password" autoComplete="current-password" />
+            {passErrors.password && <span className="ev-error">{passErrors.password}</span>}
+          </label>
+          <label className="field auth-field" htmlFor="admin-cred-new">
+            <span className="auth-label">New password (min 8)</span>
+            <input id="admin-cred-new" type="password" value={newPass} onChange={(e) => setNewPass(e.target.value)} placeholder="new password" autoComplete="new-password" />
+            {passErrors.newPassword && <span className="ev-error">{passErrors.newPassword}</span>}
+          </label>
+          <label className="field auth-field" htmlFor="admin-cred-confirm">
+            <span className="auth-label">Confirm new password</span>
+            <input id="admin-cred-confirm" type="password" value={confirmPass} onChange={(e) => setConfirmPass(e.target.value)} placeholder="repeat new password" autoComplete="new-password" />
+            {passErrors.confirm && <span className="ev-error">{passErrors.confirm}</span>}
+          </label>
+          <div className="dash-play-row">
+            <button className="btn btn-clay dash-btn" type="submit" disabled={passBusy}>
+              {passBusy ? "Saving…" : "Change password →"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function ProfileTab({ sessionUser }) {
   const [admin, setAdmin] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -497,6 +615,7 @@ function ProfileTab({ sessionUser }) {
           </div>
         </dl>
       </div>
+      <CredentialsCard currentEmail={profile.email} onEmailChanged={(a) => setAdmin(a)} />
     </div>
   );
 }

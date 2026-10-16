@@ -47,3 +47,31 @@ export async function createAdminUser({ fullName, email, phone, birthDate, age, 
     return friendlyError(err);
   }
 }
+
+/** Change own login email (current password required). Returns updated admin. */
+export async function updateAdminEmail({ newEmail, password }) {
+  try {
+    const data = await apiFetch("/api/admin/credentials/email", {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ newEmail, password }),
+    });
+    return { ok: true, admin: data.admin };
+  } catch (err) {
+    return friendlyError(err);
+  }
+}
+
+/** Change own password (current password required). Caller must re-login. */
+export async function updateAdminPassword({ currentPassword, newPassword }) {
+  try {
+    await apiFetch("/api/admin/credentials/password", {
+      method: "PUT",
+      headers: authHeaders(),
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    return { ok: true };
+  } catch (err) {
+    return friendlyError(err);
+  }
+}

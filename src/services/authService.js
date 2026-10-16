@@ -167,6 +167,16 @@ export function saveLiveSession(backendUser, token) {
   return user;
 }
 
+/** Patch fields on the stored live session user (e.g. after an email change). */
+export function patchLiveSessionUser(patch) {
+  const session = readJSON(LIVE_SESSION_KEY, null);
+  if (!session || !session.user) return null;
+  const user = { ...session.user, ...(patch || {}) };
+  writeJSON(LIVE_SESSION_KEY, { ...session, user });
+  notify(CHANNEL);
+  return user;
+}
+
 /** LIVE password reset — POST /api/auth/reset. Always resolves ok (see backend). */
 export async function requestPasswordReset(email) {
   try {
