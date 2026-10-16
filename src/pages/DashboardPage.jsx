@@ -10,6 +10,7 @@ import { navigate } from "../services/router.js";
 import { useAuth } from "../state/useAuth.js";
 import { listAnnouncements } from "../services/announcementsService.js";
 import SportsBoard from "../components/SportsBoard.jsx";
+import EventsBoard from "../components/EventsBoard.jsx";
 
 const SIDE_LINKS = [
   { id: "announcements", label: "Announcements", icon: "✿", href: "/dashboard" },
@@ -345,6 +346,15 @@ export default function DashboardPage() {
             <button
               type="button"
               role="tab"
+              aria-selected={tab === "events"}
+              className={tab === "events" ? "dash-tab active" : "dash-tab"}
+              onClick={() => setTab("events")}
+            >
+              ◈ Events
+            </button>
+            <button
+              type="button"
+              role="tab"
               aria-selected={tab === "settings"}
               className={tab === "settings" ? "dash-tab active" : "dash-tab"}
               onClick={() => setTab("settings")}
@@ -470,6 +480,8 @@ export default function DashboardPage() {
             </>
           ) : tab === "sports" ? (
             <SportsBoard user={user} />
+          ) : tab === "events" ? (
+            <EventsBoard user={user} />
           ) : (
             <>
               <div className="join-card dash-card-wide">

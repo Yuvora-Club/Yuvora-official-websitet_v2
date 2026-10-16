@@ -13,12 +13,13 @@ import {
   updateAnnouncement,
 } from "../services/announcementsService.js";
 import { createAdminUser, fetchAdminMe, fetchAdminUsers, updateAdminProfile } from "../services/adminService.js";
-import { createSportEvent, deleteSportEvent, fetchSportsMeta, fetchTeamRequests, listSportEvents, listTeams, updateSportEvent } from "../services/sportsService.js";
+import { createGeneralEvent, createSportEvent, deleteGeneralEvent, deleteSportEvent, fetchEventRegistrations, fetchSportsMeta, fetchTeamRequests, listGeneralEvents, listSportEvents, listTeams, updateGeneralEvent, updateSportEvent } from "../services/sportsService.js";
 import { calcAge, displayAge } from "../utils/age.js";
 
 const TABS = [
   { id: "announcements", label: "Announcements", icon: "📢" },
   { id: "sports", label: "Sports", icon: "⚽" },
+  { id: "events", label: "Events", icon: "◈" },
   { id: "results", label: "Results", icon: "🏆" },
   { id: "add-user", label: "Add User", icon: "＋" },
   { id: "profile", label: "Profile", icon: "❧" },
@@ -815,6 +816,271 @@ function ResultsTab() {
   );
 }
 
+function EventsTab() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [title, setTitle] = useState("");
+  const [kind, setKind] = useState("individual");
+  const [description, setDescription] = useState("");
+  const [fee, setFee] = useState("");
+  const [venue, setVenue] = useState("");
+  const [eventDate, setEventDate] = useState("");
+  const [minPlayers, setMinPlayers] = useState("2");
+  const [maxPlayers, setMaxPlayers] = useState("5");
+  const [status, setStatus] = useState("open");
+  const [editingId, setEditingId] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [msg, setMsg] = useState({ type: "", text: "" });
+  const [busy, setBusy] = useState(false);
+  const [regs, setRegs] = useState({});
+  const [regsOpen, setRegsOpen] = useState(null);
+
+  async function refresh() {
+    setLoading(true);
+    const e = await listGeneralEvents();
+    setEvents(e.events);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  function startEdit(ev) {
+    setEditingId(ev.id);
+    setTitle(ev.title || "");
+    setKind(ev.kind || "individual");
+    setDescription(ev.description || "");
+    setFee(ev.fee == null ? "" : String(ev.fee));
+    setVenue(ev.venue || "");
+    setEventDate(ev.eventDate || "");
+    setMinPlayers(ev.minPlayers != null ? String(ev.minPlayers) : "2");
+    setMaxPlayers(ev.maxPlayers != null ? String(ev.maxPlayers) : "5");
+    setStatus(ev.status || "open");
+    setErrors({});
+    setMsg({ type: "", text: "" });
+    window.scrollTo(0, 0);
+  }
+
+  function resetForm() {
+    setEditingId(null);
+    setTitle("");
+    setKind("individual");
+    setDescription("");
+    setFee("");
+    setVenue("");
+    setEventDate("");
+    setMinPlayers("2");
+    setMaxPlayers("5");
+    setStatus("open");
+    setErrors({});
+  }
+
+  async function onSubmit(e) {
+    e.preventDefault();
+    setErrors({});
+    setMsg({ type: "", text: "" });
+    setBusy(true);
+    const payload = {
+      title,
+      kind,
+      description,
+      fee: fee === "" ? null : Number(fee),
+      venue,
+      eventDate,
+      minPlayers: kind === "team" ? Number(minPlayers) : undefined,
+      maxPlayers: kind === "team" ? Number(maxPlayers) : undefined,
+      status,
+    };
+    const res = editingId ? await updateGeneralEvent(editingId, payload) : await createGeneralEvent(payload);
+    setBusy(false);
+    if (!res.ok) {
+      setErrors(res.errors || {});
+      setMsg({ type: "error", text: res.formError || "Could not save the event — check the fields." });
+      return;
+    }
+    setEvents((prev) => (editingId ? prev.map((x) => (x.id === editingId ? res.event : x)) : [res.event, ...prev]));
+    resetForm();
+    setMsg({ type: "success", text: "Event live on the member Events page ✓" });
+  }
+
+  async function onDelete(id) {
+    if (!window.confirm("Delete this event, its teams and registrations?")) return;
+    const res = await deleteGeneralEvent(id);
+    if (!res.ok) {
+      setMsg({ type: "error", text: res.formError || "Could not delete the event." });
+      return;
+    }
+    setEvents((prev) => prev.filter((x) => x.id !== id));
+  }
+
+  async function onToggleStatus(ev) {
+    const res = await updateGeneralEvent(ev.id, { ...ev, status: ev.status === "open" ? "closed" : "open" });
+    if (res.ok) setEvents((prev) => prev.map((x) => (x.id === ev.id ? res.event : x)));
+  }
+
+  async function toggleRegs(ev) {
+    if (regsOpen === ev.id) {
+      setRegsOpen(null);
+      return;
+    }
+    if (ev.kind !== "individual") return;
+    const res = await fetchEventRegistrations(ev.id);
+    if (res.ok) {
+      setRegs((prev) => ({ ...prev, [ev.id]: res.registrations }));
+      setRegsOpen(ev.id);
+    }
+  }
+
+  return (
+    <div className="admin-tab">
+      <div className="join-card admin-card">
+        <h3>{editingId ? "Edit event ✎" : "Launch an event ◈"}</h3>
+        <p className="join-sub">Summits, fairs, jams — team events run the captain flow, individuals register in one tap. Fee is optional.</p>
+        {msg.text && (
+          <p className={msg.type === "success" ? "ev-success" : "ev-formerror"} role={msg.type === "success" ? "status" : "alert"}>
+            {msg.text}
+          </p>
+        )}
+        <form onSubmit={onSubmit} noValidate>
+          <label className="field auth-field" htmlFor="admin-gev-title">
+            <span className="auth-label">Event name</span>
+            <input id="admin-gev-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Founder Mela — Season 2" maxLength={120} />
+            {errors.title && <span className="ev-error">{errors.title}</span>}
+          </label>
+          <div className="auth-row">
+            <div className="field auth-field">
+              <span className="auth-label">Type</span>
+              <div className="maker-tags" role="group" aria-label="Event type">
+                <button type="button" className={kind === "individual" ? "dash-tag maker-tag active" : "dash-tag maker-tag"} onClick={() => setKind("individual")} aria-pressed={kind === "individual"}>
+                  Individual · direct signup
+                </button>
+                <button type="button" className={kind === "team" ? "dash-tag maker-tag active" : "dash-tag maker-tag"} onClick={() => setKind("team")} aria-pressed={kind === "team"}>
+                  Team · captain flow
+                </button>
+              </div>
+              {errors.kind && <span className="ev-error">{errors.kind}</span>}
+            </div>
+            <label className="field auth-field" htmlFor="admin-gev-fee">
+              <span className="auth-label">Fee ₹ (empty = free)</span>
+              <input id="admin-gev-fee" type="number" min="0" max="100000" value={fee} onChange={(e) => setFee(e.target.value)} placeholder="Free" />
+              {errors.fee && <span className="ev-error">{errors.fee}</span>}
+            </label>
+          </div>
+          {kind === "team" && (
+            <div className="auth-row">
+              <label className="field auth-field" htmlFor="admin-gev-min">
+                <span className="auth-label">Team min players</span>
+                <input id="admin-gev-min" type="number" min="2" max="50" value={minPlayers} onChange={(e) => setMinPlayers(e.target.value)} />
+                {errors.minPlayers && <span className="ev-error">{errors.minPlayers}</span>}
+              </label>
+              <label className="field auth-field" htmlFor="admin-gev-max">
+                <span className="auth-label">Team max (locks at this)</span>
+                <input id="admin-gev-max" type="number" min="2" max="50" value={maxPlayers} onChange={(e) => setMaxPlayers(e.target.value)} />
+                {errors.maxPlayers && <span className="ev-error">{errors.maxPlayers}</span>}
+              </label>
+            </div>
+          )}
+          <div className="auth-row">
+            <label className="field auth-field" htmlFor="admin-gev-venue">
+              <span className="auth-label">Venue (optional)</span>
+              <input id="admin-gev-venue" type="text" value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="e.g. Main auditorium" maxLength={120} />
+            </label>
+            <label className="field auth-field" htmlFor="admin-gev-date">
+              <span className="auth-label">Date (optional)</span>
+              <input id="admin-gev-date" type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
+            </label>
+          </div>
+          <div className="auth-row">
+            <label className="field auth-field" htmlFor="admin-gev-status">
+              <span className="auth-label">Status</span>
+              <select id="admin-gev-status" className="admin-select" value={status} onChange={(e) => setStatus(e.target.value)}>
+                <option value="open">open — signups on</option>
+                <option value="closed">closed — frozen</option>
+              </select>
+              {errors.status && <span className="ev-error">{errors.status}</span>}
+            </label>
+          </div>
+          <label className="field auth-field" htmlFor="admin-gev-long">
+            <span className="auth-label">Full details</span>
+            <textarea id="admin-gev-long" className="admin-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Schedule, guests, rounds, what to bring…" rows={3} maxLength={2000} />
+            {errors.description && <span className="ev-error">{errors.description}</span>}
+          </label>
+          <div className="dash-play-row">
+            <button className="btn btn-clay dash-btn" type="submit" disabled={busy}>
+              {busy ? "Saving…" : editingId ? "Save changes ✓" : "Launch event →"}
+            </button>
+            {editingId && (
+              <button type="button" className="btn btn-paper dash-btn" onClick={resetForm} disabled={busy}>
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
+
+      <div className="join-card admin-card">
+        <h3>Gatherings ({events.length})</h3>
+        <p className="join-sub">Individual signups list their people below each card.</p>
+        {loading ? (
+          <p className="join-sub">Loading events…</p>
+        ) : events.length === 0 ? (
+          <div className="notice-empty">
+            <span className="notice-empty-leaf" aria-hidden="true">◈</span>
+            <b>No gatherings yet — launch the first one above.</b>
+          </div>
+        ) : (
+          <div className="event-list">
+            {events.map((ev) => (
+              <article key={ev.id} className={ev.status === "open" ? "event-card" : "event-card closed"}>
+                <div className="event-top">
+                  <span className="event-cat">{ev.kind === "team" ? "team event" : "individual"}</span>
+                  <span className={ev.status === "open" ? "event-status open" : "event-status closed"}>
+                    {ev.status === "open" ? "● open" : "■ closed"}
+                  </span>
+                </div>
+                <h4 className="event-title">{ev.title}</h4>
+                {ev.description && <p className="event-desc">{ev.description}</p>}
+                <div className="event-meta">
+                  <span>{ev.fee == null ? "Free entry" : `₹${ev.fee} entry`}</span>
+                  {ev.eventDate && <span>📅 {ev.eventDate}</span>}
+                  {ev.venue && <span>📍 {ev.venue}</span>}
+                  {ev.kind === "team"
+                    ? <span>squad {ev.minPlayers}–{ev.maxPlayers}</span>
+                    : <span>● {ev.regCount || 0} registered</span>}
+                </div>
+                <div className="dash-play-row">
+                  <button type="button" className="btn btn-paper dash-btn" onClick={() => startEdit(ev)}>Edit ✎</button>
+                  <button type="button" className="btn btn-paper dash-btn" onClick={() => onToggleStatus(ev)}>
+                    {ev.status === "open" ? "Close ■" : "Reopen ●"}
+                  </button>
+                  <button type="button" className="btn btn-paper dash-btn" onClick={() => onDelete(ev.id)}>Delete ✕</button>
+                  {ev.kind === "individual" && (
+                    <button type="button" className="btn btn-paper dash-btn" onClick={() => toggleRegs(ev)}>
+                      {regsOpen === ev.id ? "Hide people" : `See people (${ev.regCount || 0})`}
+                    </button>
+                  )}
+                </div>
+                {regsOpen === ev.id && (
+                  (regs[ev.id] || []).length === 0 ? (
+                    <p className="join-sub">Nobody registered yet.</p>
+                  ) : (
+                    <div className="team-roster">
+                      {(regs[ev.id] || []).map((r) => (
+                        <span key={r.uid} className="team-chip">{r.name}</span>
+                      ))}
+                    </div>
+                  )
+                )}
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ProfileEditCard({ profile, onSaved }) {
   const [phone, setPhone] = useState(profile.phone || "");
   const [birthDate, setBirthDate] = useState(profile.birthDate || "");
@@ -1125,6 +1391,8 @@ export default function AdminPage({ user }) {
             <AnnouncementsTab />
           ) : tab === "sports" ? (
             <SportsTab />
+          ) : tab === "events" ? (
+            <EventsTab />
           ) : tab === "results" ? (
             <ResultsTab />
           ) : tab === "add-user" ? (

@@ -164,3 +164,90 @@ export async function deleteTeam(teamId) {
     return friendlyError(err);
   }
 }
+
+// ---------- general events (summits & co — team OR individual) ----------
+
+export async function listGeneralEvents() {
+  try {
+    const data = await apiFetch("/api/general-events");
+    return { ok: true, events: Array.isArray(data.events) ? data.events : [] };
+  } catch {
+    return { ok: false, events: [] };
+  }
+}
+
+export async function createGeneralEvent(payload) {
+  try {
+    const data = await apiFetchAuth("/api/general-events", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return { ok: true, event: data.event };
+  } catch (err) {
+    return friendlyError(err);
+  }
+}
+
+export async function updateGeneralEvent(id, payload) {
+  try {
+    const data = await apiFetchAuth(`/api/general-events/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+    return { ok: true, event: data.event };
+  } catch (err) {
+    return friendlyError(err);
+  }
+}
+
+export async function deleteGeneralEvent(id) {
+  try {
+    await apiFetchAuth(`/api/general-events/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    return { ok: true };
+  } catch (err) {
+    return friendlyError(err);
+  }
+}
+
+export async function registerIndividual(eventId) {
+  try {
+    await apiFetchAuth(`/api/general-events/${encodeURIComponent(eventId)}/register`, {
+      method: "POST",
+      body: JSON.stringify({}),
+    });
+    return { ok: true };
+  } catch (err) {
+    return friendlyError(err);
+  }
+}
+
+export async function unregisterIndividual(eventId) {
+  try {
+    await apiFetchAuth(`/api/general-events/${encodeURIComponent(eventId)}/register`, {
+      method: "DELETE",
+    });
+    return { ok: true };
+  } catch (err) {
+    return friendlyError(err);
+  }
+}
+
+export async function fetchEventRegistrations(eventId) {
+  try {
+    const data = await apiFetchAuth(`/api/general-events/${encodeURIComponent(eventId)}/registrations`);
+    return { ok: true, registrations: Array.isArray(data.registrations) ? data.registrations : [] };
+  } catch (err) {
+    return { ok: false, ...friendlyError(err), registrations: [] };
+  }
+}
+
+export async function fetchMyRegistrations() {
+  try {
+    const data = await apiFetchAuth("/api/my-registrations");
+    return { ok: true, eventIds: Array.isArray(data.eventIds) ? data.eventIds : [] };
+  } catch (err) {
+    return { ok: false, ...friendlyError(err), eventIds: [] };
+  }
+}

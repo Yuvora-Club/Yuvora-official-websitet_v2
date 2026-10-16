@@ -22,7 +22,7 @@ function statusChip(team) {
   return { text: `○ forming ${team.count}/${team.minPlayers} min`, cls: "dash-tag" };
 }
 
-function TeamCard({ team, me, myTeamIds, pendingTeamIds, onChanged, setMsg }) {
+export function TeamCard({ team, me, myTeamIds, pendingTeamIds, onChanged, setMsg }) {
   const isCaptain = team.captainUid === (me && me.id);
   const isMember = myTeamIds.has(team.id);
   const askedHere = pendingTeamIds.has(team.id);
