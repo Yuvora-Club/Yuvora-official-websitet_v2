@@ -8,6 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import { logout } from "../services/authService.js";
 import { navigate } from "../services/router.js";
 import { useAuth } from "../state/useAuth.js";
+import { listAnnouncements } from "../services/announcementsService.js";
 import GroveApply from "../components/GroveApply.jsx";
 
 const SIDE_LINKS = [
@@ -110,6 +111,23 @@ export default function DashboardPage() {
   const [sproutIdx, setSproutIdx] = useState(loadSproutIdx);
   const [water, setWater] = useState(loadWater);
   const [copied, setCopied] = useState(false);
+  // Live notice board — whatever an admin posts on /admin sprouts here.
+  const [announcements, setAnnouncements] = useState([]);
+  const [annLoading, setAnnLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { announcements: list } = await listAnnouncements();
+      if (alive) {
+        setAnnouncements(list);
+        setAnnLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     try {
@@ -380,13 +398,38 @@ export default function DashboardPage() {
                 <p className="join-sub">
                   Fresh from the crew — check back often.
                 </p>
-                <div className="note-bar dash-note">
-                  <b>QUIET GROVE →</b>
-                  <span>
-                    No announcements yet. When the crew posts one, it will sprout
-                    here.
-                  </span>
-                </div>
+                {annLoading ? (
+                  <p className="join-sub">Listening to the notice board…</p>
+                ) : announcements.length === 0 ? (
+                  <div className="note-bar dash-note">
+                    <b>QUIET GROVE →</b>
+                    <span>
+                      No announcements yet. When the crew posts one, it will sprout
+                      here.
+                    </span>
+                  </div>
+                ) : (
+                  <ul className="admin-list dash-ann-list">
+                    {announcements.map((a) => (
+                      <li key={a.id} className="admin-item">
+                        <div className="admin-item-top">
+                          <b>{a.title}</b>
+                          {a.tag && <span className="dash-tag">{a.tag}</span>}
+                        </div>
+                        <p className="admin-item-body">{a.body}</p>
+                        {a.createdAt && (
+                          <small className="admin-item-meta">
+                            {new Date(a.createdAt).toLocaleDateString(undefined, {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </small>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               <GroveApply user={user} />

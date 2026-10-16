@@ -115,10 +115,21 @@ function toPublicUser(u) {
     email: u.email || "",
     altEmail: u.altEmail || null,
     phone: u.phone || "",
+    birthDate: u.birthDate || null,
     age: u.age ?? null,
+    role: u.role || "member",
     termsAcceptedAt: u.termsAcceptedAt,
     createdAt: u.createdAt,
   };
+}
+
+/** True when the signed-in user may open /admin. */
+export function isAdminUser(user) {
+  if (!user) return false;
+  if (user.role === "admin") return true;
+  // Seed-admin fallback so /admin stays reachable even if an old session
+  // was saved before `role` existed on the profile.
+  return String(user.email || "").toLowerCase() === "rishithamnchala989@gmail.com";
 }
 
 /**

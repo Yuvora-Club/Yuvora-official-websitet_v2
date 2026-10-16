@@ -1930,3 +1930,50 @@ footer::before {
   .grove-card, .grove-pick, .btn { transition: none; }
   .grove-card:hover, .grove-pick:hover, .btn:hover { transform: none; }
 }
+
+/* ---------- admin greenhouse (/admin) ---------- */
+.admin-tab { display: grid; gap: 20px; align-content: start; }
+.admin-card h3 { margin-bottom: 2px; }
+.admin-textarea {
+  width: 100%;
+  border: var(--line);
+  border-radius: 14px;
+  padding: 13px 15px;
+  font-family: var(--body);
+  font-size: 15px;
+  font-weight: 500;
+  background: #fffef8;
+  color: var(--ink);
+  outline: none;
+  resize: vertical;
+  min-height: 96px;
+}
+.admin-textarea:focus { border-color: var(--moss); box-shadow: 0 0 0 4px #e6efcf; }
+.admin-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 12px; }
+.admin-item {
+  background: #fbf6e9;
+  border: 1.5px solid #e6dcc4;
+  border-radius: 16px;
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+.admin-item-top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.admin-item-top b { font-family: var(--display); font-size: 18px; letter-spacing: -0.01em; }
+.admin-item-body { margin: 0; color: #4c5648; font-weight: 500; line-height: 1.65; font-size: 14.5px; white-space: pre-wrap; }
+.admin-item-meta { color: var(--faint); font-family: var(--mono); font-size: 11.5px; }
+.admin-edit { display: grid; gap: 8px; }
+.admin-edit input, .admin-edit textarea {
+  border: var(--line); border-radius: 12px; padding: 11px 13px;
+  font-family: var(--body); font-size: 14.5px; background: #fffef8; color: var(--ink); width: 100%;
+}
+.admin-tag { background: var(--moss-deep); color: #eef2df; border-color: var(--moss-deep); }
+.dash-side .dash-link { width: 100%; background: none; border: 0; cursor: pointer; text-align: left; font-family: inherit; }
+.dash-ann-list { margin-top: 16px; }
+.admin-profile-top { display: flex; gap: 14px; align-items: center; margin-top: 12px; }
+.admin-avatar { width: 64px; height: 64px; font-size: 26px; }
+.admin-name { font-family: var(--display); font-size: 28px; margin: 0; letter-spacing: -0.02em; }
+@media (max-width: 560px) {
+  .admin-profile-top { align-items: flex-start; }
+  .admin-name { font-size: 24px; }
+}

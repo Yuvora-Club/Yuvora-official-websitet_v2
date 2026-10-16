@@ -3,14 +3,17 @@ import MembersPage from "./pages/MembersPage.jsx";
 import NotFoundPage from "./pages/NotFoundPage.jsx";
 import JoinPage from "./pages/JoinPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
+import AdminPage from "./pages/AdminPage.jsx";
 import { LoginPage, RegisterPage } from "./pages/AuthPages.jsx";
 import { TermsPage, PrivacyPage } from "./pages/LegalPages.jsx";
 import { useAuth } from "./state/useAuth.js";
+import { isAdminUser } from "./services/authService.js";
 
 const HOME_TITLE = "Yuvora — Student-Led Club | Play. Build. Gather.";
 const MEMBERS_TITLE = "Members — Yuvora | Meet the crew";
 const JOIN_TITLE = "Join Us — Yuvora | Grow with the grove";
 const DASHBOARD_TITLE = "Dashboard — Yuvora | Your grove";
+const ADMIN_TITLE = "Admin — Yuvora | Crew clipboard";
 const LOGIN_TITLE = "Log in — Yuvora";
 const REGISTER_TITLE = "Create account — Yuvora";
 const TERMS_TITLE = "Terms & Conditions — Yuvora";
@@ -24,6 +27,7 @@ function getRoute() {
   if (path === "/members") return "members";
   if (path === "/join") return "join";
   if (path === "/dashboard") return "dashboard";
+  if (path === "/admin") return "admin";
   if (path === "/login") return "login";
   if (path === "/register") return "register";
   if (path === "/terms") return "terms";
@@ -210,6 +214,8 @@ export default function App() {
           ? JOIN_TITLE
           : route === "dashboard"
             ? DASHBOARD_TITLE
+            : route === "admin"
+              ? ADMIN_TITLE
           : route === "login"
             ? LOGIN_TITLE
             : route === "register"
@@ -221,7 +227,7 @@ export default function App() {
                   : route === "notfound"
                     ? NOTFOUND_TITLE
                     : HOME_TITLE;
-    if (route === "members" || route === "join" || route === "dashboard" || route === "login" || route === "register" || route === "terms" || route === "privacy" || route === "notfound") {
+    if (route === "members" || route === "join" || route === "dashboard" || route === "admin" || route === "login" || route === "register" || route === "terms" || route === "privacy" || route === "notfound") {
       window.scrollTo(0, 0);
     } else {
       const h = window.location.hash;
@@ -258,9 +264,9 @@ export default function App() {
       const current = getRoute();
       const offHome = current !== "home";
       const pathOnly = href ? href.split("?")[0].replace(/\/+$/, "") || "/" : "";
-      if (pathOnly === "/members" || pathOnly === "/join" || pathOnly === "/dashboard" || pathOnly === "/login" || pathOnly === "/register" || pathOnly === "/terms" || pathOnly === "/privacy") {
+      if (pathOnly === "/members" || pathOnly === "/join" || pathOnly === "/dashboard" || pathOnly === "/admin" || pathOnly === "/login" || pathOnly === "/register" || pathOnly === "/terms" || pathOnly === "/privacy") {
         e.preventDefault();
-        const target = pathOnly === "/members" ? "members" : pathOnly === "/join" ? "join" : pathOnly === "/dashboard" ? "dashboard" : pathOnly === "/login" ? "login" : pathOnly === "/register" ? "register" : pathOnly === "/terms" ? "terms" : "privacy";
+        const target = pathOnly === "/members" ? "members" : pathOnly === "/join" ? "join" : pathOnly === "/dashboard" ? "dashboard" : pathOnly === "/admin" ? "admin" : pathOnly === "/login" ? "login" : pathOnly === "/register" ? "register" : pathOnly === "/terms" ? "terms" : "privacy";
         if (current !== target) {
           window.history.pushState({}, "", href);
           setRoute(target);
@@ -326,6 +332,9 @@ export default function App() {
             ) : (
               <a className={route === "login" ? "plain members-link active" : "plain members-link"} href="/login" aria-current={route === "login" ? "page" : undefined}>Log in</a>
             )}
+            {isAdminUser(user) && (
+              <a className={route === "admin" ? "plain members-link active" : "plain members-link"} href="/admin" aria-current={route === "admin" ? "page" : undefined}>Admin</a>
+            )}
             <a className="btn btn-ink btn-tilt" href="/join" aria-current={route === "join" ? "page" : undefined}>Join Us →</a>
           </div>
         </div>
@@ -337,6 +346,8 @@ export default function App() {
         <JoinPage />
       ) : route === "dashboard" ? (
         <DashboardPage />
+      ) : route === "admin" ? (
+        <AdminPage user={user} />
       ) : route === "login" ? (
         <LoginPage next={getNext()} />
       ) : route === "register" ? (
