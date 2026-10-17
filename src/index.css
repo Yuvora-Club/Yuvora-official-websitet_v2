@@ -1024,6 +1024,57 @@ footer::before {
 .person-name:hover { text-decoration: underline; }
 .person-name-inline { font-weight: 700; color: var(--ink); }
 .person-details { margin-top: 10px; }
+
+/* floating window: event teams + payments (admin) */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 120;
+  background: rgba(39, 45, 38, 0.55); backdrop-filter: blur(3px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 4vh 16px; overflow-y: auto;
+}
+.modal-panel {
+  width: min(680px, 100%); background: var(--card); border: var(--line);
+  border-radius: var(--r-lg); box-shadow: var(--shadow); overflow: hidden;
+  display: flex; flex-direction: column; max-height: 90vh;
+}
+.modal-head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding: 18px 20px 14px; border-bottom: var(--line-soft); background: var(--paper-2);
+}
+.modal-title { font-family: var(--display); font-size: 21px; margin: 0; letter-spacing: -0.01em; }
+.modal-sub { margin: 4px 0 0; color: var(--muted); font-weight: 600; font-size: 13px; text-transform: capitalize; }
+.modal-close {
+  background: var(--card); border: var(--line); border-radius: 999px;
+  width: 34px; height: 34px; flex: none; cursor: pointer; font-weight: 800; color: var(--ink);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.modal-close:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.modal-body { padding: 16px 20px 22px; overflow-y: auto; display: grid; gap: 16px; }
+.modal-sport { display: grid; gap: 10px; }
+.modal-sport-title {
+  font-family: var(--display); font-size: 15px; margin: 0; text-transform: capitalize;
+  color: var(--moss-deep); border-bottom: var(--line-soft); padding-bottom: 6px;
+}
+.modal-line { margin: 0; font-weight: 600; font-size: 13.5px; color: var(--ink); }
+.team-inspect { border: var(--line); border-radius: 14px; overflow: hidden; background: var(--card); }
+.team-inspect.open { border-color: var(--moss-deep); }
+.team-inspect-head {
+  width: 100%; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: none; border: none; cursor: pointer; padding: 12px 14px;
+  font: inherit; text-align: left;
+}
+.team-inspect-head:hover { background: #f6f1e2; }
+.team-inspect-name { font-family: var(--display); font-size: 16px; font-weight: 700; color: var(--ink); }
+.team-inspect-count { font-size: 13px; font-weight: 700; color: var(--muted); }
+.team-inspect-caret { margin-left: auto; color: var(--moss-deep); font-weight: 800; }
+.team-inspect-body { padding: 4px 14px 16px; display: grid; gap: 12px; border-top: var(--line-soft); }
+.team-inspect-actions { display: flex; gap: 8px; flex-wrap: wrap; padding-top: 12px; }
+.paid-tag { background: var(--mist); border-color: var(--moss); color: var(--moss-deep); }
+@media (max-width: 560px) {
+  .modal-overlay { padding: 2vh 10px; }
+  .modal-panel { max-height: 95vh; }
+}
+
 .team-bar { height: 8px; border-radius: 999px; background: #e6dcc4; overflow: hidden; }
 .team-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--moss), var(--clay)); border-radius: 999px; }
 .team-reqs { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 8px; }

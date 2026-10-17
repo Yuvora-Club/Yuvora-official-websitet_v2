@@ -85,6 +85,18 @@ export async function listTeams(eventId, sportId) {
   }
 }
 
+export async function setTeamPaid(teamId, paid) {
+  try {
+    const data = await apiFetchAuth(`/api/teams/${encodeURIComponent(teamId)}/paid`, {
+      method: "PUT",
+      body: JSON.stringify({ paid }),
+    });
+    return { ok: true, team: data.team };
+  } catch (err) {
+    return friendlyError(err);
+  }
+}
+
 export async function fetchMyTeams() {
   try {
     const data = await apiFetchAuth("/api/my-teams");

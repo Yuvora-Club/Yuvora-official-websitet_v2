@@ -13,7 +13,7 @@ import {
   updateAnnouncement,
 } from "../services/announcementsService.js";
 import { createAdminUser, fetchAdminMe, fetchAdminUsers, updateAdminProfile } from "../services/adminService.js";
-import { createGeneralEvent, createSportEvent, deleteGeneralEvent, deleteSportEvent, fetchEventRegistrations, fetchSportsMeta, fetchTeamRequests, listGeneralEvents, listSportEvents, listTeams, updateGeneralEvent, updateSportEvent } from "../services/sportsService.js";
+import { createGeneralEvent, createSportEvent, deleteGeneralEvent, deleteSportEvent, fetchEventRegistrations, fetchSportsMeta, fetchTeamRequests, listGeneralEvents, listSportEvents, listTeams, setTeamPaid, updateGeneralEvent, updateSportEvent } from "../services/sportsService.js";
 import { calcAge, displayAge } from "../utils/age.js";
 
 const TABS = [
@@ -468,6 +468,7 @@ function SportsTab() {
   const [errors, setErrors] = useState({});
   const [msg, setMsg] = useState({ type: "", text: "" });
   const [busy, setBusy] = useState(false);
+  const [inspectEvent, setInspectEvent] = useState(null);
 
   async function refresh() {
     setLoading(true);
@@ -661,6 +662,7 @@ function SportsTab() {
                   ))}
                 </div>
                 <div className="dash-play-row">
+                  <button type="button" className="btn btn-clay dash-btn" onClick={() => setInspectEvent(ev)}>Teams &amp; payments 👥</button>
                   <button type="button" className="btn btn-paper dash-btn" onClick={() => startEdit(ev)}>Edit ✎</button>
                   <button type="button" className="btn btn-paper dash-btn" onClick={() => onToggleStatus(ev)}>
                     {ev.status === "open" ? "Close ■" : "Reopen ●"}
@@ -672,6 +674,9 @@ function SportsTab() {
           </div>
         )}
       </div>
+      {inspectEvent && (
+        <EventTeamsModal event={inspectEvent} sports={meta.sports} onClose={() => setInspectEvent(null)} />
+      )}
     </div>
   );
 }
@@ -730,6 +735,126 @@ function PersonDetails({ person, fallbackName }) {
         </dd>
       </div>
     </dl>
+  );
+}
+
+function EventTeamsModal({ event, sports, onClose }) {
+  const [teams, setTeams] = useState([]);
+  const [people, setPeople] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [openTeam, setOpenTeam] = useState(null);
+  const [openPerson, setOpenPerson] = useState(null);
+  const [busyTeam, setBusyTeam] = useState(null);
+  const [msg, setMsg] = useState("");
+
+  const sportName = (id) => (sports.find((s) => s.id === id) || {}).name || id;
+  const personKey = (u) => u.uid || u.id;
+  const byUid = new Map(people.map((u) => [personKey(u), u]));
+  const toggleTeam = (id) => { setOpenPerson(null); setOpenTeam((cur) => (cur === id ? null : id)); };
+  const togglePerson = (uid) => setOpenPerson((cur) => (cur === uid ? null : uid));
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setLoading(true);
+      const [t, u] = await Promise.all([listTeams(event.id), fetchAdminUsers()]);
+      if (!alive) return;
+      setTeams(t.ok ? t.teams : []);
+      setPeople(u.ok ? u.users : []);
+      if (!t.ok) setMsg(t.formError || "Could not load teams.");
+      setLoading(false);
+    })();
+    return () => { alive = false; };
+  }, [event.id]);
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  async function togglePaid(team) {
+    setBusyTeam(team.id);
+    setMsg("");
+    const res = await setTeamPaid(team.id, !team.paid);
+    setBusyTeam(null);
+    if (!res.ok) { setMsg(res.formError || "Could not update payment."); return; }
+    setTeams((prev) => prev.map((t) => (t.id === team.id ? { ...t, paid: !team.paid } : t)));
+  }
+
+  const bySport = {};
+  for (const t of teams) {
+    (bySport[t.sportId] = bySport[t.sportId] || []).push(t);
+  }
+
+  return (
+    <div className="modal-overlay" role="presentation" onClick={onClose}>
+      <div className="modal-panel" role="dialog" aria-modal="true" aria-label={`Teams for ${event.title}`} onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <div>
+            <h3 className="modal-title">{event.title}</h3>
+            <p className="modal-sub">{event.category} · {teams.length} team{teams.length === 1 ? "" : "s"}</p>
+          </div>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <div className="modal-body">
+          {msg && <p className="ev-error">{msg}</p>}
+          {loading ? (
+            <p className="join-sub">Loading teams…</p>
+          ) : teams.length === 0 ? (
+            <div className="notice-empty">
+              <span className="notice-empty-leaf" aria-hidden="true">👥</span>
+              <b>No teams yet.</b>
+              <p>Members haven’t formed any teams for this event.</p>
+            </div>
+          ) : (
+            Object.entries(bySport).map(([sportId, list]) => (
+              <section key={sportId} className="modal-sport">
+                <h4 className="modal-sport-title">{sportName(sportId)}</h4>
+                {list.map((team) => {
+                  const expanded = openTeam === team.id;
+                  return (
+                    <article key={team.id} className={expanded ? "team-inspect open" : "team-inspect"}>
+                      <button type="button" className="team-inspect-head" onClick={() => toggleTeam(team.id)} aria-expanded={expanded}>
+                        <span className="team-inspect-name">{team.name}</span>
+                        <span className="team-inspect-count">{team.count}/{team.maxPlayers}</span>
+                        <span className={team.paid ? "dash-tag paid-tag" : "dash-tag"}>{team.paid ? "● paid" : "○ unpaid"}</span>
+                        <span className="team-inspect-caret">{expanded ? "▾" : "▸"}</span>
+                      </button>
+                      {expanded && (
+                        <div className="team-inspect-body">
+                          <div className="team-inspect-actions">
+                            <button type="button" className={team.paid ? "btn btn-paper dash-btn" : "btn btn-clay dash-btn"} disabled={busyTeam === team.id} onClick={() => togglePaid(team)}>
+                              {busyTeam === team.id ? "Saving…" : team.paid ? "Mark unpaid" : "Mark paid ✓"}
+                            </button>
+                          </div>
+                          <p className="modal-line"><b>Captain:</b> {team.captainName || "—"}</p>
+                          <div className="field auth-field">
+                            <span className="auth-label">Members ({team.count})</span>
+                            <div className="maker-tags" role="group" aria-label="Team members">
+                              {(team.members || []).map((m) => (
+                                <button key={m.uid} type="button" className={openPerson === m.uid ? "dash-tag maker-tag active" : "dash-tag maker-tag"} onClick={() => togglePerson(m.uid)} aria-pressed={openPerson === m.uid}>
+                                  {m.name}{m.uid === team.captainUid ? " ★" : ""}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          {openPerson && (team.members || []).some((m) => m.uid === openPerson) && (
+                            <div className="person-details">
+                              <PersonDetails person={byUid.get(openPerson)} fallbackName={(team.members || []).find((m) => m.uid === openPerson)?.name} />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
+              </section>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
