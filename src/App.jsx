@@ -379,7 +379,7 @@ export default function App() {
             <a href="#play" className="btn btn-paper">Walk the 5 fields ↓</a>
           </div>
           <div className="hero-meta">
-            <span className="chip">✿ 5 sports · badminton = singles + doubles</span>
+            <span className="chip">✿ volleyball · football · badminton · cricket · basketball</span>
             <span className="chip">☘ hack club inside</span>
             <span className="chip">☾ summits by day, music by night</span>
           </div>
@@ -622,26 +622,26 @@ export default function App() {
         </div>
       </section>
 
-      {/* AFTER DARK */}
+      {/* AFTER DARK — youth music + social gatherings */}
       <section className="afterdark" id="afterdark">
         <div className="wrap">
           <div className="sec-head reveal">
             <span className="sec-no">☾ 05 — after dark</span>
-            <h2>After dark:<br />music + moon socials</h2>
-            <p style={{ color: "#b9bfae" }}>Terrace frequencies, open mics that melt into dancefloors, themed slow socials and one glowy student rave per season. Loud, lit, and tucked in by 10.</p>
+            <h2>After dark:<br />youth music + socials</h2>
+            <p style={{ color: "#b9bfae" }}>Yuvora is where the campus comes to feel alive after sunset. <b style={{ color: "#f6e3b4" }}>Youth music, open mics, DJ nights and social gatherings</b> — from slow terrace jam circles to full student raves with glow paint, fairy lights and dancefloors that don't quit. Every night is student-run, loud in the best way, and tucked in by 10.</p>
           </div>
           <div className="gig-list">
             <article className="gig reveal">
               <div className="when">♪ OPEN MIC → HEADLINER · fairy lights: 214 bulbs</div>
               <h3>Terrace Frequency</h3>
-              <p style={{ fontWeight: 500, color: "#5c6758", lineHeight: 1.65 }}>Guitars → beatbox → a student DJ closes. Anyone gets 7 minutes. Floor cushions, jute rugs, <b>canteen fries stall</b> and a notebook for song requests.</p>
+              <p style={{ fontWeight: 500, color: "#5c6758", lineHeight: 1.65 }}>Guitars → beatbox → a student DJ closes. Anyone gets 7 minutes. Youth bands, first-time singers, rap cyphers and jam circles — floor cushions, jute rugs, <b>canteen fries stall</b> and a notebook for song requests.</p>
               <div className="fee-row"><span>members free · +1 ₹49</span><a href="#join">RSVP →</a></div>
               <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#9aa392", marginTop: 8 }}>setlist pressed in logbook · rain plan: indoor hall, same glow</div>
             </article>
             <article className="gig reveal">
               <div className="when">☾ STUDENT GLOW RAVE · ID CHECKED · WATER STATION</div>
-              <h3>Neon Kho-Kho Afterparty</h3>
-              <p style={{ fontWeight: 500, color: "#5c6758", lineHeight: 1.65 }}>Finals-night special. Glow paint by volunteers, two DJ crews, a 10-min kho-kho exhibition as the “opening act”. <b>Chill corner + safety fireflies</b> all night.</p>
+              <h3>Neon Social Rave</h3>
+              <p style={{ fontWeight: 500, color: "#5c6758", lineHeight: 1.65 }}>One glowy student rave per season. Glow paint by volunteers, two DJ crews back-to-back, themed socials, slow-dance corners and meet-new-people mixers. <b>Chill corner + safety fireflies</b> all night.</p>
               <div className="fee-row"><span>seed-pass holders only</span><a href="#join">Get pass →</a></div>
               <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#9aa392", marginTop: 8 }}>wrap 10pm · lit paths · parent/campus contact on every poster</div>
             </article>
