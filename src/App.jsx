@@ -636,7 +636,7 @@ export default function App() {
               <h3>After Dark at Yuvora</h3>
               <p style={{ fontWeight: 500, color: "#5c6758", lineHeight: 1.7 }}>When the sun drops, the campus lights up. Open mics and youth bands → rap cyphers and jam circles → student DJs taking the floor till close. Glow paint, 214 fairy bulbs, themed socials, slow-dance corners and meet-new-people mixers — <b>every rave is student-run, for students only.</b></p>
               <p style={{ fontWeight: 500, color: "#5c6758", lineHeight: 1.7, marginTop: 8 }}><b>How we keep it safe:</b> ID-checked entry · strict no-alcohol student policy · consent + chill-out crew in glowing vests all night · lit paths and buddy exits · free water station · wrap sharp by 10pm with parent/campus contact on every poster. Glow, not sketch — anyone uncomfortable gets walked out safe, no questions.</p>
-              <div className="fee-row"><span>seed-pass holders only · members free · +1 ₹49</span><a href="#join">Get pass →</a></div>
+              <div className="fee-row"><span>free for members · guests with a member ₹49</span><a href="#join">Get pass →</a></div>
               <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#9aa392", marginTop: 8 }}>rain plan: indoor hall, same glow · setlist pressed in logbook</div>
             </article>
           </div>

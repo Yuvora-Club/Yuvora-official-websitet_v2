@@ -15,9 +15,11 @@ import {
 import { createAdminUser, fetchAdminMe, fetchAdminUsers, updateAdminProfile } from "../services/adminService.js";
 import { createGeneralEvent, createSportEvent, deleteGeneralEvent, deleteSportEvent, fetchEventRegistrations, fetchSportsMeta, fetchTeamRequests, listGeneralEvents, listSportEvents, listTeams, setTeamPaid, updateGeneralEvent, updateSportEvent } from "../services/sportsService.js";
 import { calcAge, displayAge } from "../utils/age.js";
+import VerifyPassTab from "./VerifyPassTab.jsx";
 
 const TABS = [
   { id: "announcements", label: "Announcements", icon: "📢" },
+  { id: "verify", label: "Verify Pass", icon: "🎟" },
   { id: "sports", label: "Sports", icon: "⚽" },
   { id: "events", label: "Events", icon: "◈" },
   { id: "results", label: "Results", icon: "🏆" },
@@ -1814,6 +1816,8 @@ export default function AdminPage({ user }) {
 
           {tab === "announcements" ? (
             <AnnouncementsTab />
+          ) : tab === "verify" ? (
+            <VerifyPassTab />
           ) : tab === "sports" ? (
             <SportsTab />
           ) : tab === "events" ? (

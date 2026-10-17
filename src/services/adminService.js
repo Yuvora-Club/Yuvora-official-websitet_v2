@@ -62,3 +62,33 @@ export async function updateAdminProfile({ phone, birthDate, age, role }) {
     return friendlyError(err);
   }
 }
+
+// ---------- seed-pass gate (rave / social entry) ----------
+// Code format YV-XXXX (e.g. YV-8930), case-insensitive, dash optional.
+// Backend owns verification + scan log; admin ID token attached via apiFetchAuth.
+
+/** Look up a member by seed-pass code. Shows profile + scan history. */
+export async function verifySeedPass(code) {
+  try {
+    const data = await apiFetchAuth("/api/admin/seedpass/verify", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    });
+    return { ok: true, ...data };
+  } catch (err) {
+    return friendlyError(err);
+  }
+}
+
+/** Log a gate entry scan for a code. Warns when already scanned (double-use). */
+export async function consumeSeedPass(code, note) {
+  try {
+    const data = await apiFetchAuth("/api/admin/seedpass/consume", {
+      method: "POST",
+      body: JSON.stringify({ code, note: note || "" }),
+    });
+    return { ok: true, ...data };
+  } catch (err) {
+    return friendlyError(err);
+  }
+}
