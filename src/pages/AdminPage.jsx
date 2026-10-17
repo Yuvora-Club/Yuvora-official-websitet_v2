@@ -465,6 +465,9 @@ function SportsTab() {
   const [sports, setSports] = useState([]);
   const [status, setStatus] = useState("open");
   const [regDeadline, setRegDeadline] = useState("");
+  const [entryFee, setEntryFee] = useState("");
+  const [maxTeams, setMaxTeams] = useState("");
+  const [sportFees, setSportFees] = useState({});
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
   const [msg, setMsg] = useState({ type: "", text: "" });
@@ -498,6 +501,9 @@ function SportsTab() {
     setSports(Array.isArray(ev.sports) ? ev.sports : []);
     setStatus(ev.status || "open");
     setRegDeadline(ev.regDeadline || "");
+    setEntryFee(ev.entryFee == null ? "" : String(ev.entryFee));
+    setMaxTeams(ev.maxTeams == null ? "" : String(ev.maxTeams));
+    setSportFees(ev.sportFees && typeof ev.sportFees === "object" ? ev.sportFees : {});
     setErrors({});
     setMsg({ type: "", text: "" });
     window.scrollTo(0, 0);
@@ -513,6 +519,9 @@ function SportsTab() {
     setSports([]);
     setStatus("open");
     setRegDeadline("");
+    setEntryFee("");
+    setMaxTeams("");
+    setSportFees({});
     setErrors({});
   }
 
@@ -521,7 +530,23 @@ function SportsTab() {
     setErrors({});
     setMsg({ type: "", text: "" });
     setBusy(true);
-    const payload = { title, category, description, venue, eventDate, sports, status, regDeadline };
+    const fees = {};
+    for (const [sid, v] of Object.entries(sportFees)) {
+      if (sports.includes(sid) && v !== "" && v != null) fees[sid] = v;
+    }
+    const payload = {
+      title,
+      category,
+      description,
+      venue,
+      eventDate,
+      sports,
+      status,
+      regDeadline,
+      entryFee: entryFee === "" ? null : entryFee,
+      maxTeams: maxTeams === "" ? null : maxTeams,
+      sportFees: fees,
+    };
     const res = editingId ? await updateSportEvent(editingId, payload) : await createSportEvent(payload);
     setBusy(false);
     if (!res.ok) {
@@ -602,6 +627,40 @@ function SportsTab() {
             {errors.regDeadline && <span className="ev-error">{errors.regDeadline}</span>}
             <span className="auth-hint">When this moment passes, teams freeze and the event closes automatically.</span>
           </label>
+          <div className="auth-row">
+            <label className="field auth-field" htmlFor="admin-ev-fee">
+              <span className="auth-label">Team entry fee (₹)</span>
+              <input id="admin-ev-fee" type="number" min="0" max="1000000" value={entryFee} onChange={(e) => setEntryFee(e.target.value)} placeholder="e.g. 1500" />
+              {errors.entryFee && <span className="ev-error">{errors.entryFee}</span>}
+              <span className="auth-hint">Empty = the club&apos;s default fee. Captains pay this by UPI.</span>
+            </label>
+            <label className="field auth-field" htmlFor="admin-ev-maxteams">
+              <span className="auth-label">Team cap (optional)</span>
+              <input id="admin-ev-maxteams" type="number" min="1" max="1000" value={maxTeams} onChange={(e) => setMaxTeams(e.target.value)} placeholder="e.g. 15" />
+              {errors.maxTeams && <span className="ev-error">{errors.maxTeams}</span>}
+              <span className="auth-hint">Max paid teams. Empty = global default.</span>
+            </label>
+          </div>
+          {sports.length > 0 && (
+            <div className="field auth-field">
+              <span className="auth-label">Per-sport fee override (optional)</span>
+              <div className="fee-grid">
+                {sports.map((sid) => (
+                  <label className="fee-row" key={sid}>
+                    <span>{sportName(sid)}</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={sportFees[sid] ?? ""}
+                      onChange={(e) => setSportFees((f) => ({ ...f, [sid]: e.target.value }))}
+                      placeholder="₹ base"
+                    />
+                  </label>
+                ))}
+              </div>
+              <span className="auth-hint">Blank uses the team entry fee above.</span>
+            </div>
+          )}
           <label className="field auth-field" htmlFor="admin-ev-desc">
             <span className="auth-label">Details for members</span>
             <textarea id="admin-ev-desc" className="admin-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Format, entry, what to bring…" rows={3} maxLength={2000} />
@@ -1715,6 +1774,10 @@ export default function AdminPage({ user }) {
                 {t.label}
               </button>
             ))}
+            <a href="/pay-admin" className="dash-link">
+              <span aria-hidden="true">₹</span>
+              Payments dashboard
+            </a>
             <a href="/dashboard" className="dash-link">
               <span aria-hidden="true">✿</span>
               Member dashboard

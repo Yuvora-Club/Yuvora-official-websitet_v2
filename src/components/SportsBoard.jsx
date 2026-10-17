@@ -16,6 +16,7 @@ import {
   requestToJoin,
   isEventClosed,
 } from "../services/sportsService.js";
+import TeamPayment from "./TeamPayment.jsx";
 
 function statusChip(team) {
   if (team.status === "locked") return { text: "■ locked — roster full", cls: "dash-tag admin-tag" };
@@ -61,6 +62,7 @@ export function TeamCard({ team, me, myTeamIds, pendingTeamIds, onChanged, setMs
         <b className="notice-title">{team.name}</b>
         <span className={chip.cls}>{chip.text}</span>
       </div>
+      {isCaptain && team.paid && <span className="dash-tag pay-paid-chip">₹ entry fee paid</span>}
       <small className="admin-item-meta">
         {isCaptain ? "★ you are captain" : `captain ${team.captainName}`} · subs allowed {team.subs}
       </small>
@@ -102,6 +104,7 @@ export function TeamCard({ team, me, myTeamIds, pendingTeamIds, onChanged, setMs
               </ul>
             )
           )}
+          <TeamPayment teamId={team.id} paid={team.paid} onChanged={onChanged} setMsg={setMsg} />
         </>
       ) : isMember ? (
         <div className="dash-play-row">

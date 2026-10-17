@@ -2324,3 +2324,139 @@ footer::before {
   .maker-preview { position: static; }
   .notice-item { grid-template-columns: 20px 1fr; }
 }
+
+/* ---------- team entry-fee payments (captain) ---------- */
+.pay-panel {
+  margin-top: 14px;
+  border: var(--line);
+  border-radius: var(--r-md);
+  background: #fbf7ea;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+.pay-paid { background: #eef3e6; border-color: var(--moss); }
+.pay-paid b { font-family: var(--display); font-size: 18px; color: var(--moss-deep); }
+.pay-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.pay-head b { font-family: var(--display); font-size: 24px; letter-spacing: -0.02em; }
+.pay-head .join-sub { flex-basis: 100%; }
+.pay-notice {
+  margin: 0;
+  font-weight: 600;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #7a4a1f;
+  background: #fdf3d8;
+  border: 1.5px dashed #d9a441;
+  border-radius: 10px;
+  padding: 9px 11px;
+}
+.pay-order-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pay-ref { font-family: var(--mono); font-size: 12.5px; font-weight: 700; letter-spacing: 0.06em; color: var(--moss-deep); }
+.pay-status {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: var(--kraft);
+  color: var(--ink);
+  border: 1px solid #d9cdb4;
+  white-space: nowrap;
+}
+.pay-status.pending { background: #fdf3d8; border-color: #d9a441; color: #7a4a1f; }
+.pay-status.confirmed { background: #eef3e6; border-color: var(--moss); color: var(--moss-deep); }
+.pay-status.rejected, .pay-status.expired { background: #f6ddd4; border-color: var(--clay); color: #8a4026; }
+.pay-status.needsrefund, .pay-status.refunded { background: #e8ede0; border-color: var(--sage); color: var(--moss-deep); }
+.pay-amount {
+  display: grid;
+  gap: 3px;
+  text-align: center;
+  border: var(--line);
+  border-radius: var(--r-md);
+  background: var(--card);
+  padding: 16px;
+}
+.pay-amount span { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.pay-amount b { font-family: var(--display); font-size: 34px; line-height: 1; letter-spacing: -0.03em; }
+.pay-paise { font-family: var(--mono); font-size: 11px; color: var(--faint); }
+.pay-upi { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.pay-upi > div { display: grid; gap: 4px; }
+.pay-mini { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.pay-copy {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  font-weight: 700;
+  background: var(--card);
+  border: var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--ink);
+  transition: transform 0.15s ease;
+}
+.pay-copy:hover { transform: translateY(-2px); }
+.pay-qr { display: grid; justify-items: center; gap: 6px; }
+.pay-qr img { background: #fff; padding: 8px; border: var(--line); border-radius: 16px; box-shadow: var(--shadow-sm); }
+.pay-utr { display: grid; gap: 8px; border-top: var(--line-soft); padding-top: 12px; }
+.pay-turnstile { min-height: 65px; display: flex; align-items: center; }
+.pay-paid-chip { background: #eef3e6; border-color: var(--moss); color: var(--moss-deep); }
+
+/* ---------- admin per-sport fee override ---------- */
+.fee-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; margin-top: 8px; }
+.fee-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--card);
+  border: var(--line-soft);
+  border-radius: 12px;
+  padding: 7px 10px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--muted);
+}
+.fee-row input { width: 96px; max-width: 60%; }
+
+/* ---------- payments dashboard (/pay-admin) ---------- */
+.payadmin-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
+.payadmin-card { display: grid; gap: 4px; text-align: center; padding: 16px; margin-bottom: 0; }
+.payadmin-card small { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.payadmin-card b { font-family: var(--display); font-size: 28px; letter-spacing: -0.02em; color: var(--moss-deep); }
+.payadmin-table-wrap {
+  overflow-x: auto;
+  border: var(--line);
+  border-radius: var(--r-lg);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  margin-top: 14px;
+}
+.payadmin-table { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 1020px; }
+.payadmin-table th, .payadmin-table td { text-align: left; padding: 10px 12px; border-bottom: var(--line-soft); vertical-align: top; }
+.payadmin-table th {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--paper-2);
+}
+.payadmin-table tr:last-child td { border-bottom: 0; }
+.payadmin-table small { color: var(--muted); font-size: 11.5px; }
+.payadmin-amt { font-family: var(--mono); font-weight: 700; color: var(--moss-deep); white-space: nowrap; }
+.payadmin-input {
+  width: 92px;
+  padding: 6px 8px;
+  border: var(--line-soft);
+  border-radius: 10px;
+  background: var(--paper);
+  font: inherit;
+}
+.payadmin-actions { display: flex; flex-direction: column; gap: 6px; min-width: 132px; }
+.payadmin-actions .dash-btn { font-size: 12.5px; padding: 7px 10px; }
+@media (max-width: 720px) {
+  .payadmin-card b { font-size: 22px; }
+}
