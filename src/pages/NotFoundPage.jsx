@@ -40,7 +40,7 @@ export default function NotFoundPage({ path }) {
             Back to sunlight ✿
           </a>
           <a className="btn btn-paper" href="/#play">
-            Walk the 6 fields ↓
+            Walk the 5 fields ↓
           </a>
           <a className="btn btn-paper" href="/members">
             Meet the crew →

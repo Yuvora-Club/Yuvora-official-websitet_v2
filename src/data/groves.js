@@ -48,7 +48,7 @@ export function getGrove(id) {
 }
 
 export const GROVE_EVENTS = [
-  // ---- Play Grove (6 sports, exact supplied concepts) ----
+  // ---- Play Grove (5 sports, exact supplied concepts) ----
   {
     id: "play-volleyball",
     groveId: "play",
@@ -106,7 +106,7 @@ export const GROVE_EVENTS = [
     format: "8-a-side · tennis ball",
     squad: "Squad of 10",
     description: "Fast 5-over smash. Bat, box booking + scorer's notebook on us.",
-    whisper: "",
+    whisper: "Every ball is a new opportunity. Every innings is a new story",
     kind: "team",
     priced: true,
     formHeading: "Ready for Friday night lights?",
@@ -128,22 +128,6 @@ export const GROVE_EVENTS = [
     formHeading: "Ready for sunset runs?",
     glyph: "🏀",
     tint: "#F3D2B8",
-  },
-  {
-    id: "play-khokho",
-    groveId: "play",
-    title: "Kho Kho",
-    subtitle: "Clay + mat · Heritage Sundays",
-    category: "Team sport",
-    format: "9 on mat + 3 subs",
-    squad: "Squad of 12",
-    description: "Desi classic, proper mat, whistle + a dhol for finals.",
-    whisper: "Fastest feet on campus",
-    kind: "team",
-    priced: true,
-    formHeading: "Ready to be the fastest feet?",
-    glyph: "❧",
-    tint: "#D9CFC0",
   },
   // ---- Build Grove (one general application option) ----
   {
@@ -190,7 +174,7 @@ export const GROVE_EVENTS = [
     format: "Try-it zones · sticker passports · teardown corner — guilt-free",
     squad: "Wanderers welcome",
     description:
-      "Robots, etched boards, games and glowing sites. Sticker passports for wanderers, a teardown table of dead remotes, and seniors who explain without sighing.",
+      "Robots, tech boards, games and glowing sites. Sticker passports for wanderers, a teardown table of dead remotes, and seniors who explain without sighing.",
     whisper: "Unscrew everything, ask anything",
     kind: "bazaar",
     priced: false,

@@ -110,9 +110,9 @@ export const EVENTS = [
     glyph: "⌨",
   },
   {
-    id: "etch-solder-sunday",
-    slug: "etch-solder-sunday",
-    title: "Etch & Solder Sunday",
+    id: "tech-solder-sunday",
+    slug: "tech-solder-sunday",
+    title: "Tech & Solder Sunday",
     category: "build",
     tagline: "Sensors, PCBs and blink-everything boards",
     description:

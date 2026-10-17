@@ -97,7 +97,7 @@ const SPORTS = [
     time: "Friday night lights",
     type: "team",
     note: "Fast 5-over smash. Bat, box booking + scorer's notebook on us.",
-    whisper: "tape-ball swing after dew",
+    whisper: "Every ball is a new opportunity. Every innings is a new story",
   },
   {
     name: "Basketball",
@@ -110,18 +110,6 @@ const SPORTS = [
     type: "team",
     note: "Full-court runs. Reversible jerseys, pine-scented bench spray.",
     whisper: "squeak of shoes at dusk",
-  },
-  {
-    name: "Kho Kho",
-    short: "KK",
-    color: "#D9CFC0",
-    format: "9 on mat + 3 subs",
-    squad: "Squad of 12",
-    ground: "Clay + mat",
-    time: "Heritage Sundays",
-    type: "team",
-    note: "Desi classic, proper mat, whistle + a dhol for finals.",
-    whisper: "fastest feet on campus",
   },
 ];
 
@@ -163,8 +151,8 @@ function useReveal(dep) {
 function Ticker() {
   const items = [
     "100% student-grown",
-    "6 sports · 1 doubles-only",
-    "coding + etch workshops",
+    "5 sports · 1 doubles-only",
+    "coding + tech workshops",
     "hack club greenhouse inside",
     "entrepreneur summit",
     "tech fair",
@@ -383,15 +371,15 @@ export default function App() {
           <p className="hero-sub">
             <strong>Yuvora</strong> is one all-student club with three groves —{" "}
             <strong>sunlit sport leagues</strong>, a <strong>Hack Club tech greenhouse</strong> with
-            coding + etch workshops, and <strong>summits, fairs, hackathons &amp; moonlit music</strong>.
+            coding + tech workshops, and <strong>summits, fairs, hackathons &amp; moonlit music</strong>.
             Small entry fees. Honest merch funding. Zero stiff adult energy.
           </p>
           <div className="hero-cta">
             <a href="#join" className="btn btn-clay">Claim your seed pass ✿</a>
-            <a href="#play" className="btn btn-paper">Walk the 6 fields ↓</a>
+            <a href="#play" className="btn btn-paper">Walk the 5 fields ↓</a>
           </div>
           <div className="hero-meta">
-            <span className="chip">✿ 6 sports · badminton = singles + doubles</span>
+            <span className="chip">✿ 5 sports · badminton = singles + doubles</span>
             <span className="chip">☘ hack club inside</span>
             <span className="chip">☾ summits by day, music by night</span>
           </div>
@@ -455,7 +443,7 @@ export default function App() {
             <small className="latin">campus athletica — sown at golden hour</small>
             <ul>
               <li><span className="ic">☀</span><span><b>Volleyball · Football · Cricket</b><br />dust, turf, floodlights + lime lines</span></li>
-              <li><span className="ic">☘</span><span><b>Basketball · Kho Kho</b> <small>(full teams, loud sidelines)</small></span></li>
+              <li><span className="ic">☘</span><span><b>Basketball</b> <small>(full team, loud sidelines)</small></span></li>
               <li><span className="ic">✿</span><span><b>Badminton</b> <small>(singles + doubles only — the quiet room)</small></span></li>
             </ul>
             <div className="soil">soil: worn grass · water: 2 chai breaks · light: flood + fireflies</div>
@@ -468,7 +456,7 @@ export default function App() {
             <small className="latin">hackus clubus — ship & keep your petals</small>
             <ul>
               <li><span className="ic">⌨</span><span><b>Coding workshops</b><br /><span style={{ color: "#b9c2a8" }}>sites, bots, mini-games · zero to demo</span></span></li>
-              <li><span className="ic">◍</span><span><b>Etch / electronics</b><br /><span style={{ color: "#b9c2a8" }}>PCBs, sensors, blink-everything boards</span></span></li>
+              <li><span className="ic">◍</span><span><b>Tech / electronics</b><br /><span style={{ color: "#b9c2a8" }}>PCBs, sensors, blink-everything boards</span></span></li>
               <li><span className="ic">✿</span><span>Ship → <b>keep your merch</b>. Club merch → <b>waters Yuvora</b>.</span></li>
             </ul>
             <div className="soil">humidity: solder + rain · mentors: seniors with burnt fingers</div>
@@ -494,7 +482,7 @@ export default function App() {
       <section className="wrap" id="play" style={{ paddingTop: 8 }}>
         <div className="sec-head reveal">
           <span className="sec-no">❧ 02 — play</span>
-          <h2>The Play grove<br /><em>six little fields</em></h2>
+          <h2>The Play grove<br /><em>five little fields</em></h2>
           <p>Everything except badminton is a <b>team sport</b>. Badminton blooms as <b>singles + doubles</b>. Each card lists its ground, its hour and its smell — because details are the aura.</p>
         </div>
         <div className="sports">
@@ -529,7 +517,7 @@ export default function App() {
           {[0, 1].map((h) => (
             <div key={h} style={{ display: "inline-flex" }}>
               {Array.from({ length: 8 }).map((_, i) => (
-                <i key={i}>volleyball ❧ football ❧ badminton ❧ cricket ❧ basketball ❧ kho kho ❧&nbsp;</i>
+                <i key={i}>volleyball ❧ football ❧ badminton ❧ cricket ❧ basketball ❧&nbsp;</i>
               ))}
             </div>
           ))}
@@ -545,7 +533,7 @@ export default function App() {
           <div className="sec-head reveal">
             <span className="sec-no">❧ 03 — build</span>
             <h2>Build grove ×<br />Hack Club</h2>
-            <p style={{ color: "#b9c2a8" }}>Our tech grove grows inside <b style={{ color: "#f6e3b4" }}>Hack Club</b> — the global greenhouse of student hackers. Weekend workshops in code + etch, then ship real things into the rain and earn real petals.</p>
+            <p style={{ color: "#b9c2a8" }}>Our tech grove grows inside <b style={{ color: "#f6e3b4" }}>Hack Club</b> — the global greenhouse of student hackers. Weekend workshops in code + tech, then ship real things into the rain and earn real petals.</p>
           </div>
           <div className="hack-grid">
             <div className="journal reveal">
@@ -556,7 +544,7 @@ export default function App() {
               <div className="term-body">
                 <div><span className="g">$</span> yuvora workshops --list</div>
                 <div className="dim">→ coding: personal sites, discord bots, tiny games (sat, 4pm, with pakoras)</div>
-                <div className="dim">→ etch: sensors, PCBs, blink-everything boards (sun, 11am, burnt fingers club)</div>
+                <div className="dim">→ tech: sensors, PCBs, blink-everything boards (sun, 11am, burnt fingers club)</div>
                 <div><span className="g">$</span> yuvora ship ./my-project --with-rain</div>
                 <div>✓ shipped! hack club sent <span className="o">stickers + tee + hardware grant</span> → <span className="paper-note">yours to keep, forever</span></div>
                 <div>✓ club merch counter <span className="g">+₹2,400</span> → waters next summit + new footballs</div>
@@ -575,7 +563,7 @@ export default function App() {
                 </div>
               </div>
               <div className="steps reveal">
-                <div className="step"><b>1</b><p><strong>Sow.</strong> Weekend coding + etch workshops. Zero experience needed — seniors pot beside you, debug beside you.</p></div>
+                <div className="step"><b>1</b><p><strong>Sow.</strong> Weekend coding + tech workshops. Zero experience needed — seniors pot beside you, debug beside you.</p></div>
                 <div className="step"><b>2</b><p><strong>Sprout.</strong> Finish a site / bot / board, demo it on the little stage. Hack Club counts it as shipped.</p></div>
                 <div className="step"><b>3</b><p><strong>Shade others.</strong> Wear the club tee at summits; harvest profits keep every entry fee tiny.</p></div>
               </div>
@@ -616,7 +604,7 @@ export default function App() {
               <div style={{ marginTop: 8, fontFamily: "var(--mono)", fontSize: 11, color: "#42563a" }}>❧ try-it zones · sticker passports · teardown corner (guilt-free)</div>
             </div>
             <div className="poster-body">
-              Robots, etched boards, games and glowing sites. <strong>Sticker passports</strong> for wanderers, a teardown table of dead remotes, and seniors who explain without sighing.
+              Robots, tech boards, games and glowing sites. <strong>Sticker passports</strong> for wanderers, a teardown table of dead remotes, and seniors who explain without sighing.
             </div>
           </article>
           <article className="poster reveal">
@@ -758,7 +746,7 @@ export default function App() {
             </div>
             <div>
               <h5>Groves</h5>
-              <a href="#play">Play — 6 fields</a>
+              <a href="#play">Play — 5 fields</a>
               <a href="#build">Build — Hack Club</a>
               <a href="#summits">Summits + ships</a>
               <a href="#afterdark">After dark</a>
