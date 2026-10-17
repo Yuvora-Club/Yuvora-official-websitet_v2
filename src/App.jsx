@@ -630,20 +630,14 @@ export default function App() {
             <h2>After dark:<br />youth music + socials</h2>
             <p style={{ color: "#b9bfae" }}>Yuvora is where the campus comes to feel alive after sunset. <b style={{ color: "#f6e3b4" }}>Youth music, open mics, DJ nights and social gatherings</b> — from slow terrace jam circles to full student raves with glow paint, fairy lights and dancefloors that don't quit. Every night is student-run, loud in the best way, and tucked in by 10.</p>
           </div>
-          <div className="gig-list">
+          <div className="gig-list" style={{ gridTemplateColumns: "1fr" }}>
             <article className="gig reveal">
-              <div className="when">♪ OPEN MIC → HEADLINER · fairy lights: 214 bulbs</div>
-              <h3>Terrace Frequency</h3>
-              <p style={{ fontWeight: 500, color: "#5c6758", lineHeight: 1.65 }}>Guitars → beatbox → a student DJ closes. Anyone gets 7 minutes. Youth bands, first-time singers, rap cyphers and jam circles — floor cushions, jute rugs, <b>canteen fries stall</b> and a notebook for song requests.</p>
-              <div className="fee-row"><span>members free · +1 ₹49</span><a href="#join">RSVP →</a></div>
-              <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#9aa392", marginTop: 8 }}>setlist pressed in logbook · rain plan: indoor hall, same glow</div>
-            </article>
-            <article className="gig reveal">
-              <div className="when">☾ STUDENT GLOW RAVE · ID CHECKED · WATER STATION</div>
-              <h3>Neon Social Rave</h3>
-              <p style={{ fontWeight: 500, color: "#5c6758", lineHeight: 1.65 }}>One glowy student rave per season. Glow paint by volunteers, two DJ crews back-to-back, themed socials, slow-dance corners and meet-new-people mixers. <b>Chill corner + safety fireflies</b> all night.</p>
-              <div className="fee-row"><span>seed-pass holders only</span><a href="#join">Get pass →</a></div>
-              <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#9aa392", marginTop: 8 }}>wrap 10pm · lit paths · parent/campus contact on every poster</div>
+              <div className="when">☾ YOUTH MUSIC · SOCIAL GATHERINGS · STUDENT RAVES · ID CHECKED</div>
+              <h3>After Dark at Yuvora</h3>
+              <p style={{ fontWeight: 500, color: "#5c6758", lineHeight: 1.7 }}>When the sun drops, the campus lights up. Open mics and youth bands → rap cyphers and jam circles → student DJs taking the floor till close. Glow paint, 214 fairy bulbs, themed socials, slow-dance corners and meet-new-people mixers — <b>every rave is student-run, for students only.</b></p>
+              <p style={{ fontWeight: 500, color: "#5c6758", lineHeight: 1.7, marginTop: 8 }}><b>How we keep it safe:</b> ID-checked entry · strict no-alcohol student policy · consent + chill-out crew in glowing vests all night · lit paths and buddy exits · free water station · wrap sharp by 10pm with parent/campus contact on every poster. Glow, not sketch — anyone uncomfortable gets walked out safe, no questions.</p>
+              <div className="fee-row"><span>seed-pass holders only · members free · +1 ₹49</span><a href="#join">Get pass →</a></div>
+              <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "#9aa392", marginTop: 8 }}>rain plan: indoor hall, same glow · setlist pressed in logbook</div>
             </article>
           </div>
           <p className="reveal" style={{ fontFamily: "var(--mono)", fontSize: 12, marginTop: 16, color: "#9aa78f" }}>
