@@ -52,6 +52,7 @@ export default function JoinPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [altEmail, setAltEmail] = useState("");
+  const [school, setSchool] = useState("");
   const [phone, setPhone] = useState("");
   const [age, setAge] = useState("");
   const [password, setPassword] = useState("");
@@ -80,6 +81,7 @@ export default function JoinPage() {
           fullName,
           email,
           altEmail: altEmail || undefined,
+          school,
           phone,
           age: age === "" ? "" : Number(age),
           password,
@@ -339,6 +341,18 @@ export default function JoinPage() {
               </div>
               <FieldErr message={fieldErrors.phone} />
               <FieldErr message={fieldErrors.age} />
+
+              <label className="field auth-field join-field" htmlFor="join-school">
+                <span className="auth-label">School</span>
+                <input
+                  id="join-school"
+                  value={school}
+                  onChange={(e) => setSchool(e.target.value)}
+                  placeholder="e.g. Delhi Public School"
+                  maxLength={120}
+                />
+              </label>
+              <FieldErr message={fieldErrors.school} />
             </div>
 
             <div className="join-group">

@@ -38,11 +38,11 @@ export async function fetchAdminUsers() {
   }
 }
 
-export async function createAdminUser({ fullName, email, phone, birthDate, age, password }) {
+export async function createAdminUser({ fullName, email, school, phone, birthDate, age, password }) {
   try {
     const data = await apiFetchAuth("/api/admin/users", {
       method: "POST",
-      body: JSON.stringify({ fullName, email, phone, birthDate, age, password }),
+      body: JSON.stringify({ fullName, email, school, phone, birthDate, age, password }),
     });
     return { ok: true, user: data.user };
   } catch (err) {

@@ -499,6 +499,10 @@ export default function DashboardPage() {
                     <dt>Email</dt>
                     <dd>{user.email || "—"}</dd>
                   </div>
+                  <div>
+                    <dt>School</dt>
+                    <dd>{user.school || "—"}</dd>
+                  </div>
                   {user.altEmail ? (
                     <div>
                       <dt>Alternate email</dt>

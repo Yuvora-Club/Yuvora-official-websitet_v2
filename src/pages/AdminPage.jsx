@@ -304,6 +304,7 @@ function AnnouncementsTab() {
 function AddUserTab() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [school, setSchool] = useState("");
   const [phone, setPhone] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [password, setPassword] = useState("");
@@ -338,6 +339,7 @@ function AddUserTab() {
     const res = await createAdminUser({
       fullName,
       email,
+      school,
       phone,
       birthDate: birthDate || undefined,
       password,
@@ -352,6 +354,7 @@ function AddUserTab() {
     setSuccess(`${res.user.fullName} is now an admin. They can log in and open /admin.`);
     setFullName("");
     setEmail("");
+    setSchool("");
     setPhone("");
     setBirthDate("");
     setPassword("");
@@ -397,6 +400,11 @@ function AddUserTab() {
               {errors.phone && <span className="ev-error">{errors.phone}</span>}
             </label>
           </div>
+          <label className="field auth-field" htmlFor="admin-new-school">
+            <span className="auth-label">School</span>
+            <input id="admin-new-school" type="text" value={school} onChange={(e) => setSchool(e.target.value)} placeholder="e.g. Delhi Public School" maxLength={120} autoComplete="off" />
+            {errors.school && <span className="ev-error">{errors.school}</span>}
+          </label>
           <div className="auth-row">
             <label className="field auth-field" htmlFor="admin-new-dob">
               <span className="auth-label">Birth date {liveAge != null ? `· age ${liveAge}` : ""}</span>
@@ -434,7 +442,7 @@ function AddUserTab() {
                   <span className={u.role === "admin" ? "dash-tag admin-tag" : "dash-tag"}>{u.role === "admin" ? "★ admin" : "member"}</span>
                 </div>
                 <small className="admin-item-meta">
-                  {u.email || "—"} · {u.phone || "no phone"} · {u.birthDate ? `born ${u.birthDate} · age ${displayAge(u) ?? "—"}` : `age ${u.age ?? "—"}`}
+                  {u.email || "—"} · {u.school || "no school"} · {u.phone || "no phone"} · {u.birthDate ? `born ${u.birthDate} · age ${displayAge(u) ?? "—"}` : `age ${u.age ?? "—"}`}
                 </small>
               </li>
             ))}
@@ -694,6 +702,10 @@ function PersonDetails({ person, fallbackName }) {
         <dd>{person.email || "—"}</dd>
       </div>
       <div>
+        <dt>School</dt>
+        <dd>{person.school || "—"}</dd>
+      </div>
+      <div>
         <dt>Phone</dt>
         <dd>{person.phone || "—"}</dd>
       </div>
@@ -816,7 +828,7 @@ function ResultsTab() {
                       <span className={u.role === "admin" ? "dash-tag admin-tag" : "dash-tag"}>{u.role === "admin" ? "★ admin" : "member"}</span>
                     </div>
                     <small className="admin-item-meta">
-                      {u.email || "—"} · {u.phone || "no phone"} · age {displayAge(u) ?? "—"}
+                      {u.email || "—"} · {u.school || "no school"} · {u.phone || "no phone"} · age {displayAge(u) ?? "—"}
                       {u.createdAt ? ` · joined ${new Date(u.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}` : ""}
                     </small>
                     {openPerson === personKey(u) && (
