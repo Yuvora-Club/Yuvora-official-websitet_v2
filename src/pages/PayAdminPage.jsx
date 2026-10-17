@@ -43,16 +43,6 @@ export default function PayAdminPage() {
   const [received, setReceived] = useState({});
   const [notice, setNotice] = useState("");
 
-  // TEMPORARY: dashboard is open (PAY_ADMIN_OPEN=true) — auto-enter, no password.
-  useEffect(() => {
-    if (!getPayAdminToken()) {
-      payAdminLogin("open").then((res) => {
-        if (res.ok) setAuthed(true);
-        else setLoading(false);
-      });
-    }
-  }, []);
-
   const load = useCallback(async () => {
     const [o, s] = await Promise.all([listPayOrders(filter), getPaySummary()]);
     setLoading(false);
