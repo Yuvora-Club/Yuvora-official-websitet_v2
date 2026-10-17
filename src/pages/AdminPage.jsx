@@ -934,11 +934,16 @@ function EventsTab() {
   const [busy, setBusy] = useState(false);
   const [regs, setRegs] = useState({});
   const [regsOpen, setRegsOpen] = useState(null);
+  const [people, setPeople] = useState({});
+  const [openPerson, setOpenPerson] = useState(null);
+
+  const togglePerson = (uid) => setOpenPerson((cur) => (cur === uid ? null : uid));
 
   async function refresh() {
     setLoading(true);
-    const e = await listGeneralEvents();
+    const [e, u] = await Promise.all([listGeneralEvents(), fetchAdminUsers()]);
     setEvents(e.events);
+    if (u.ok) setPeople(Object.fromEntries(u.users.map((x) => [x.uid || x.id, x])));
     setLoading(false);
   }
 
@@ -1165,11 +1170,29 @@ function EventsTab() {
                   (regs[ev.id] || []).length === 0 ? (
                     <p className="join-sub">Nobody registered yet.</p>
                   ) : (
-                    <div className="team-roster">
-                      {(regs[ev.id] || []).map((r) => (
-                        <span key={r.uid} className="team-chip">{r.name}</span>
-                      ))}
-                    </div>
+                    <>
+                      <div className="team-roster">
+                        {(regs[ev.id] || []).map((r) => (
+                          <button
+                            type="button"
+                            key={r.uid}
+                            className={"team-chip" + (openPerson === r.uid ? " active" : "")}
+                            onClick={() => togglePerson(r.uid)}
+                            aria-expanded={openPerson === r.uid}
+                          >
+                            {r.name}
+                          </button>
+                        ))}
+                      </div>
+                      {(regs[ev.id] || []).some((r) => r.uid === openPerson) && (
+                        <div className="person-details">
+                          <PersonDetails
+                            person={people[openPerson]}
+                            fallbackName={(regs[ev.id] || []).find((r) => r.uid === openPerson)?.name}
+                          />
+                        </div>
+                      )}
+                    </>
                   )
                 )}
               </article>
