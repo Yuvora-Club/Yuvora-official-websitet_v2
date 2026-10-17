@@ -4,6 +4,12 @@
 
 import { apiFetch, apiFetchAuth } from "./api.js";
 
+// An event's registrations are closed once an admin closes it or its
+// registration deadline passes (backend sends a `regClosed` flag on each event).
+export function isEventClosed(ev) {
+  return !!ev && (ev.status === "closed" || ev.regClosed === true);
+}
+
 function friendlyError(err) {
   const sessionExpired = !!(err && (err.sessionExpired || err.status === 401));
   const payload = err && err.data;

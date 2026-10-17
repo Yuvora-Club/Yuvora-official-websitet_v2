@@ -1498,6 +1498,7 @@ footer::before {
   background: repeating-linear-gradient(90deg, #d9cdb4 0 6px, transparent 6px 10px);
   opacity: 0.8;
 }
+.auth-hint { display: block; margin-top: 6px; color: var(--muted); font-weight: 600; font-size: 12.5px; }
 .auth-form input {
   width: 100%;
   border: var(--line);

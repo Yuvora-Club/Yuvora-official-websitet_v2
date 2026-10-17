@@ -464,6 +464,7 @@ function SportsTab() {
   const [eventDate, setEventDate] = useState("");
   const [sports, setSports] = useState([]);
   const [status, setStatus] = useState("open");
+  const [regDeadline, setRegDeadline] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
   const [msg, setMsg] = useState({ type: "", text: "" });
@@ -496,6 +497,7 @@ function SportsTab() {
     setEventDate(ev.eventDate || "");
     setSports(Array.isArray(ev.sports) ? ev.sports : []);
     setStatus(ev.status || "open");
+    setRegDeadline(ev.regDeadline || "");
     setErrors({});
     setMsg({ type: "", text: "" });
     window.scrollTo(0, 0);
@@ -510,6 +512,7 @@ function SportsTab() {
     setEventDate("");
     setSports([]);
     setStatus("open");
+    setRegDeadline("");
     setErrors({});
   }
 
@@ -518,7 +521,7 @@ function SportsTab() {
     setErrors({});
     setMsg({ type: "", text: "" });
     setBusy(true);
-    const payload = { title, category, description, venue, eventDate, sports, status };
+    const payload = { title, category, description, venue, eventDate, sports, status, regDeadline };
     const res = editingId ? await updateSportEvent(editingId, payload) : await createSportEvent(payload);
     setBusy(false);
     if (!res.ok) {
@@ -593,6 +596,12 @@ function SportsTab() {
               <input id="admin-ev-date" type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
             </label>
           </div>
+          <label className="field auth-field" htmlFor="admin-ev-deadline">
+            <span className="auth-label">Registration deadline (optional)</span>
+            <input id="admin-ev-deadline" type="datetime-local" value={regDeadline} onChange={(e) => setRegDeadline(e.target.value)} />
+            {errors.regDeadline && <span className="ev-error">{errors.regDeadline}</span>}
+            <span className="auth-hint">When this moment passes, teams freeze and the event closes automatically.</span>
+          </label>
           <label className="field auth-field" htmlFor="admin-ev-desc">
             <span className="auth-label">Details for members</span>
             <textarea id="admin-ev-desc" className="admin-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Format, entry, what to bring…" rows={3} maxLength={2000} />
@@ -642,35 +651,39 @@ function SportsTab() {
           </div>
         ) : (
           <div className="event-list">
-            {events.map((ev) => (
-              <article key={ev.id} className={ev.status === "open" ? "event-card" : "event-card closed"}>
-                <div className="event-top">
-                  <span className="event-cat">{ev.category}</span>
-                  <span className={ev.status === "open" ? "event-status open" : "event-status closed"}>
-                    {ev.status === "open" ? "● open" : "■ closed"}
-                  </span>
-                </div>
-                <h4 className="event-title">{ev.title}</h4>
-                {ev.description && <p className="event-desc">{ev.description}</p>}
-                <div className="event-meta">
-                  {ev.eventDate && <span>📅 {ev.eventDate}</span>}
-                  {ev.venue && <span>📍 {ev.venue}</span>}
-                </div>
-                <div className="event-sports">
-                  {(ev.sports || []).map((s) => (
-                    <span key={s} className="event-sport">{sportName(s)}</span>
-                  ))}
-                </div>
-                <div className="dash-play-row">
-                  <button type="button" className="btn btn-clay dash-btn" onClick={() => setInspectEvent(ev)}>Teams &amp; payments 👥</button>
-                  <button type="button" className="btn btn-paper dash-btn" onClick={() => startEdit(ev)}>Edit ✎</button>
-                  <button type="button" className="btn btn-paper dash-btn" onClick={() => onToggleStatus(ev)}>
-                    {ev.status === "open" ? "Close ■" : "Reopen ●"}
-                  </button>
-                  <button type="button" className="btn btn-paper dash-btn" onClick={() => onDelete(ev.id)}>Delete ✕</button>
-                </div>
-              </article>
-            ))}
+            {events.map((ev) => {
+              const closed = ev.status === "closed" || ev.regClosed;
+              return (
+                <article key={ev.id} className={closed ? "event-card closed" : "event-card"}>
+                  <div className="event-top">
+                    <span className="event-cat">{ev.category}</span>
+                    <span className={closed ? "event-status closed" : "event-status open"}>
+                      {closed ? "■ closed" : "● open"}
+                    </span>
+                  </div>
+                  <h4 className="event-title">{ev.title}</h4>
+                  {ev.description && <p className="event-desc">{ev.description}</p>}
+                  <div className="event-meta">
+                    {ev.eventDate && <span>📅 {ev.eventDate}</span>}
+                    {ev.venue && <span>📍 {ev.venue}</span>}
+                    {ev.regDeadline && <span>⏳ reg. closes {ev.regDeadline.replace("T", " · ")}</span>}
+                  </div>
+                  <div className="event-sports">
+                    {(ev.sports || []).map((s) => (
+                      <span key={s} className="event-sport">{sportName(s)}</span>
+                    ))}
+                  </div>
+                  <div className="dash-play-row">
+                    <button type="button" className="btn btn-clay dash-btn" onClick={() => setInspectEvent(ev)}>Teams &amp; payments 👥</button>
+                    <button type="button" className="btn btn-paper dash-btn" onClick={() => startEdit(ev)}>Edit ✎</button>
+                    <button type="button" className="btn btn-paper dash-btn" onClick={() => onToggleStatus(ev)}>
+                      {ev.status === "open" ? "Close ■" : "Reopen ●"}
+                    </button>
+                    <button type="button" className="btn btn-paper dash-btn" onClick={() => onDelete(ev.id)}>Delete ✕</button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
       </div>
@@ -1140,6 +1153,7 @@ function EventsTab() {
   const [minPlayers, setMinPlayers] = useState("2");
   const [maxPlayers, setMaxPlayers] = useState("5");
   const [status, setStatus] = useState("open");
+  const [regDeadline, setRegDeadline] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [errors, setErrors] = useState({});
   const [msg, setMsg] = useState({ type: "", text: "" });
@@ -1174,6 +1188,7 @@ function EventsTab() {
     setMinPlayers(ev.minPlayers != null ? String(ev.minPlayers) : "2");
     setMaxPlayers(ev.maxPlayers != null ? String(ev.maxPlayers) : "5");
     setStatus(ev.status || "open");
+    setRegDeadline(ev.regDeadline || "");
     setErrors({});
     setMsg({ type: "", text: "" });
     window.scrollTo(0, 0);
@@ -1190,6 +1205,7 @@ function EventsTab() {
     setMinPlayers("2");
     setMaxPlayers("5");
     setStatus("open");
+    setRegDeadline("");
     setErrors({});
   }
 
@@ -1208,6 +1224,7 @@ function EventsTab() {
       minPlayers: kind === "team" ? Number(minPlayers) : undefined,
       maxPlayers: kind === "team" ? Number(maxPlayers) : undefined,
       status,
+      regDeadline,
     };
     const res = editingId ? await updateGeneralEvent(editingId, payload) : await createGeneralEvent(payload);
     setBusy(false);
@@ -1317,7 +1334,13 @@ function EventsTab() {
               </select>
               {errors.status && <span className="ev-error">{errors.status}</span>}
             </label>
+            <label className="field auth-field" htmlFor="admin-gev-deadline">
+              <span className="auth-label">Registration deadline (optional)</span>
+              <input id="admin-gev-deadline" type="datetime-local" value={regDeadline} onChange={(e) => setRegDeadline(e.target.value)} />
+              {errors.regDeadline && <span className="ev-error">{errors.regDeadline}</span>}
+            </label>
           </div>
+          <p className="auth-hint">When the deadline passes, registrations freeze and the event closes automatically.</p>
           <label className="field auth-field" htmlFor="admin-gev-long">
             <span className="auth-label">Full details</span>
             <textarea id="admin-gev-long" className="admin-textarea" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Schedule, guests, rounds, what to bring…" rows={3} maxLength={2000} />
@@ -1348,12 +1371,14 @@ function EventsTab() {
           </div>
         ) : (
           <div className="event-list">
-            {events.map((ev) => (
-              <article key={ev.id} className={ev.status === "open" ? "event-card" : "event-card closed"}>
+            {events.map((ev) => {
+              const closed = ev.status === "closed" || ev.regClosed;
+              return (
+              <article key={ev.id} className={closed ? "event-card closed" : "event-card"}>
                 <div className="event-top">
                   <span className="event-cat">{ev.kind === "team" ? "team event" : "individual"}</span>
-                  <span className={ev.status === "open" ? "event-status open" : "event-status closed"}>
-                    {ev.status === "open" ? "● open" : "■ closed"}
+                  <span className={closed ? "event-status closed" : "event-status open"}>
+                    {closed ? "■ closed" : "● open"}
                   </span>
                 </div>
                 <h4 className="event-title">{ev.title}</h4>
@@ -1362,6 +1387,7 @@ function EventsTab() {
                   <span>{ev.fee == null ? "Free entry" : `₹${ev.fee} entry`}</span>
                   {ev.eventDate && <span>📅 {ev.eventDate}</span>}
                   {ev.venue && <span>📍 {ev.venue}</span>}
+                  {ev.regDeadline && <span>⏳ reg. closes {ev.regDeadline.replace("T", " · ")}</span>}
                   {ev.kind === "team"
                     ? <span>squad {ev.minPlayers}–{ev.maxPlayers}</span>
                     : <span>● {ev.regCount || 0} registered</span>}
@@ -1408,7 +1434,8 @@ function EventsTab() {
                   )
                 )}
               </article>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

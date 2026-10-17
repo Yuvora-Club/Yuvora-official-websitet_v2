@@ -14,6 +14,7 @@ import {
   listSportEvents,
   listTeams,
   requestToJoin,
+  isEventClosed,
 } from "../services/sportsService.js";
 
 function statusChip(team) {
@@ -22,7 +23,7 @@ function statusChip(team) {
   return { text: `○ forming ${team.count}/${team.minPlayers} min`, cls: "dash-tag" };
 }
 
-export function TeamCard({ team, me, myTeamIds, pendingTeamIds, onChanged, setMsg }) {
+export function TeamCard({ team, me, myTeamIds, pendingTeamIds, onChanged, setMsg, registrationClosed = false }) {
   const isCaptain = team.captainUid === (me && me.id);
   const isMember = myTeamIds.has(team.id);
   const askedHere = pendingTeamIds.has(team.id);
@@ -93,7 +94,7 @@ export function TeamCard({ team, me, myTeamIds, pendingTeamIds, onChanged, setMs
                   <li key={r.uid}>
                     <span>{r.name}</span>
                     <span className="team-req-btns">
-                      <button type="button" className="btn btn-clay dash-btn" disabled={busy} onClick={() => run(() => decideRequest(team.id, r.uid, "approve"), `${r.name} is in ✓`)}>Let in ✓</button>
+                      <button type="button" className="btn btn-clay dash-btn" disabled={busy || registrationClosed} onClick={() => run(() => decideRequest(team.id, r.uid, "approve"), `${r.name} is in ✓`)}>Let in ✓</button>
                       <button type="button" className="btn btn-paper dash-btn" disabled={busy} onClick={() => run(() => decideRequest(team.id, r.uid, "reject"), "Request declined.")}>No ✕</button>
                     </span>
                   </li>
@@ -110,6 +111,8 @@ export function TeamCard({ team, me, myTeamIds, pendingTeamIds, onChanged, setMs
         </div>
       ) : askedHere ? (
         <p className="join-sub">Request sent — waiting on captain {team.captainName}…</p>
+      ) : registrationClosed ? (
+        <p className="join-sub">■ Registrations are closed for this event — view only.</p>
       ) : team.locked ? (
         <p className="join-sub">Locked — roster hit {team.maxPlayers}. Try another team or event.</p>
       ) : (
@@ -213,7 +216,7 @@ export default function SportsBoard({ user }) {
               <h3>Official events</h3>
               <p className="join-sub">Pick an event, pick a sport, join a team — or raise your own.</p>
             </div>
-            <span className="notice-count">{events.filter((e) => e.status === "open").length}</span>
+            <span className="notice-count">{events.filter((e) => !isEventClosed(e)).length}</span>
           </div>
           {events.length === 0 ? (
             <div className="notice-empty">
@@ -225,12 +228,13 @@ export default function SportsBoard({ user }) {
             <div className="event-list">
               {events.map((ev) => {
                 const myCount = mine.teams.filter((t) => t.eventId === ev.id).length;
+                const evClosed = isEventClosed(ev);
                 return (
-                  <article key={ev.id} className={ev.status === "open" ? "event-card" : "event-card closed"}>
+                  <article key={ev.id} className={evClosed ? "event-card closed" : "event-card"}>
                     <div className="event-top">
                       <span className="event-cat">{ev.category}</span>
-                      <span className={ev.status === "open" ? "event-status open" : "event-status closed"}>
-                        {ev.status === "open" ? "● open" : "■ closed"}
+                      <span className={evClosed ? "event-status closed" : "event-status open"}>
+                        {evClosed ? "■ closed" : "● open"}
                       </span>
                     </div>
                     <h4 className="event-title">{ev.title}</h4>
@@ -238,6 +242,7 @@ export default function SportsBoard({ user }) {
                     <div className="event-meta">
                       {ev.eventDate && <span>📅 {ev.eventDate}</span>}
                       {ev.venue && <span>📍 {ev.venue}</span>}
+                      {ev.regDeadline && <span>⏳ reg. closes {ev.regDeadline.replace("T", " · ")}</span>}
                       {myCount > 0 && <span className="event-mine">★ in {myCount} team{myCount > 1 ? "s" : ""}</span>}
                     </div>
                     <div className="event-sports">
@@ -289,7 +294,7 @@ export default function SportsBoard({ user }) {
               );
             })}
           </div>
-          {event.status !== "open" && (
+          {isEventClosed(event) && (
             <p className="join-sub">■ This event is closed — rosters are frozen, view only.</p>
           )}
         </article>
@@ -311,7 +316,7 @@ export default function SportsBoard({ user }) {
             <span className="notice-count">{teams.length}</span>
           </div>
 
-          {event.status === "open" && !myRosterHere && !myPendingHere && (
+          {!isEventClosed(event) && !myRosterHere && !myPendingHere && (
             <form className="team-create" onSubmit={onCreateTeam}>
               <b>Raise your own team ★</b>
               <p className="join-sub">You become captain — every join needs your yes.</p>
@@ -340,7 +345,7 @@ export default function SportsBoard({ user }) {
           ) : (
             <div className="team-list">
               {teams.map((t) => (
-                <TeamCard key={t.id} team={t} me={user} myTeamIds={myTeamIds} pendingTeamIds={pendingTeamIds} setMsg={setMsg} onChanged={() => refreshTeams(event.id, sportMeta.id)} />
+                <TeamCard key={t.id} team={t} me={user} myTeamIds={myTeamIds} pendingTeamIds={pendingTeamIds} registrationClosed={isEventClosed(event)} setMsg={setMsg} onChanged={() => refreshTeams(event.id, sportMeta.id)} />
               ))}
             </div>
           )}

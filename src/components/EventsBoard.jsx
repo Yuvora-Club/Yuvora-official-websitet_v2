@@ -8,6 +8,7 @@ import {
   createTeam,
   fetchMyRegistrations,
   fetchMyTeams,
+  isEventClosed,
   listGeneralEvents,
   listTeams,
   registerIndividual,
@@ -123,7 +124,7 @@ export default function EventsBoard({ user }) {
               <h3>Events</h3>
               <p className="join-sub">Summits, fairs, jams — register solo or raise a team.</p>
             </div>
-            <span className="notice-count">{events.filter((e) => e.status === "open").length}</span>
+            <span className="notice-count">{events.filter((e) => !isEventClosed(e)).length}</span>
           </div>
           {events.length === 0 ? (
             <div className="notice-empty">
@@ -133,28 +134,32 @@ export default function EventsBoard({ user }) {
             </div>
           ) : (
             <div className="event-list">
-              {events.map((ev) => (
-                <article key={ev.id} className={ev.status === "open" ? "event-card" : "event-card closed"}>
-                  <div className="event-top">
-                    <span className="event-cat">{ev.kind === "team" ? "team event" : "individual"}</span>
-                    <span className={ev.status === "open" ? "event-status open" : "event-status closed"}>
-                      {ev.status === "open" ? "● open" : "■ closed"}
-                    </span>
-                  </div>
-                  <h4 className="event-title">{ev.title}</h4>
-                  {ev.description && <p className="event-desc">{ev.description}</p>}
-                  <div className="event-meta">
-                    <span>{feeLabel(ev)}</span>
-                    {ev.eventDate && <span>📅 {ev.eventDate}</span>}
-                    {ev.venue && <span>📍 {ev.venue}</span>}
-                    {ev.kind === "individual" && <span>● {ev.regCount || 0} going</span>}
-                    {ev.kind === "individual" && myRegs.includes(ev.id) && <span className="event-mine">★ registered</span>}
-                  </div>
-                  <button type="button" className="btn btn-clay dash-btn event-cta" onClick={() => openEvent(ev)}>
-                    Open →
-                  </button>
-                </article>
-              ))}
+              {events.map((ev) => {
+                const evClosed = isEventClosed(ev);
+                return (
+                  <article key={ev.id} className={evClosed ? "event-card closed" : "event-card"}>
+                    <div className="event-top">
+                      <span className="event-cat">{ev.kind === "team" ? "team event" : "individual"}</span>
+                      <span className={evClosed ? "event-status closed" : "event-status open"}>
+                        {evClosed ? "■ closed" : "● open"}
+                      </span>
+                    </div>
+                    <h4 className="event-title">{ev.title}</h4>
+                    {ev.description && <p className="event-desc">{ev.description}</p>}
+                    <div className="event-meta">
+                      <span>{feeLabel(ev)}</span>
+                      {ev.eventDate && <span>📅 {ev.eventDate}</span>}
+                      {ev.venue && <span>📍 {ev.venue}</span>}
+                      {ev.regDeadline && <span>⏳ reg. closes {ev.regDeadline.replace("T", " · ")}</span>}
+                      {ev.kind === "individual" && <span>● {ev.regCount || 0} going</span>}
+                      {ev.kind === "individual" && myRegs.includes(ev.id) && <span className="event-mine">★ registered</span>}
+                    </div>
+                    <button type="button" className="btn btn-clay dash-btn event-cta" onClick={() => openEvent(ev)}>
+                      Open →
+                    </button>
+                  </article>
+                );
+              })}
             </div>
           )}
         </article>
@@ -179,7 +184,7 @@ export default function EventsBoard({ user }) {
           </div>
 
           {event.kind === "individual" ? (
-            event.status !== "open" ? (
+            isEventClosed(event) ? (
               <p className="join-sub">■ Registrations closed for this one.</p>
             ) : registered ? (
               <div className="dash-play-row">
@@ -199,7 +204,7 @@ export default function EventsBoard({ user }) {
           ) : (
             <>
               <p className="join-sub">Squad {event.minPlayers}–{event.maxPlayers} · full house locks the team.</p>
-              {event.status === "open" && !myTeamHere && !myPendingHere && (
+              {!isEventClosed(event) && !myTeamHere && !myPendingHere && (
                 <form className="team-create" onSubmit={onCreateTeam}>
                   <b>Raise your own team ★</b>
                   <p className="join-sub">You become captain — every join needs your yes.</p>
@@ -227,7 +232,7 @@ export default function EventsBoard({ user }) {
               ) : (
                 <div className="team-list">
                   {teams.map((t) => (
-                    <TeamCard key={t.id} team={t} me={user} myTeamIds={myTeamIds} pendingTeamIds={pendingTeamIds} setMsg={setMsg} onChanged={() => refreshTeams(event.id)} />
+                    <TeamCard key={t.id} team={t} me={user} myTeamIds={myTeamIds} pendingTeamIds={pendingTeamIds} registrationClosed={isEventClosed(event)} setMsg={setMsg} onChanged={() => refreshTeams(event.id)} />
                   ))}
                 </div>
               )}
