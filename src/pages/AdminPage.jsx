@@ -741,6 +741,8 @@ function ResultsTab() {
   const [rosters, setRosters] = useState({});
   const [formError, setFormError] = useState("");
   const [openPerson, setOpenPerson] = useState(null);
+  const [generalEvents, setGeneralEvents] = useState([]);
+  const [generalRosters, setGeneralRosters] = useState({});
 
   const personKey = (u) => u.uid || u.id;
   const byUid = new Map(members.map((u) => [personKey(u), u]));
@@ -750,13 +752,14 @@ function ResultsTab() {
     let alive = true;
     (async () => {
       setLoading(true);
-      const [m, e, u] = await Promise.all([fetchSportsMeta(), listSportEvents(), fetchAdminUsers()]);
+      const [m, e, u, ge] = await Promise.all([fetchSportsMeta(), listSportEvents(), fetchAdminUsers(), listGeneralEvents()]);
       if (!alive) return;
       if (m.ok) setMeta({ sports: m.sports });
       setEvents(e.events);
+      setGeneralEvents(ge.events);
       if (u.ok) setMembers(u.users);
       else setFormError(u.formError || "Could not load registrations.");
-      // Every event × sport: teams + their pending requests (admin sees all).
+      // Sport events: every event × sport -> teams + their pending requests.
       const agg = {};
       for (const ev of e.events) {
         agg[ev.id] = {};
@@ -772,8 +775,26 @@ function ResultsTab() {
           agg[ev.id][sid] = withReqs;
         }
       }
+      // General events: team events -> teams, individual events -> signups.
+      const agg2 = {};
+      for (const ev of ge.events) {
+        if (ev.kind === "team") {
+          const t = await listTeams(ev.id, "general");
+          const withReqs = [];
+          for (const team of (t.ok ? t.teams : [])) {
+            const r = await fetchTeamRequests(team.id);
+            withReqs.push({ ...team, pendingReqs: r.ok ? r.requests : [] });
+            if (!alive) return;
+          }
+          agg2[ev.id] = { kind: "team", teams: withReqs };
+        } else {
+          const r = await fetchEventRegistrations(ev.id);
+          agg2[ev.id] = { kind: "individual", regs: r.ok ? r.registrations : [] };
+        }
+      }
       if (alive) {
         setRosters(agg);
+        setGeneralRosters(agg2);
         setLoading(false);
       }
     })();
@@ -783,9 +804,66 @@ function ResultsTab() {
   }, []);
 
   const sportName = (id) => (meta.sports.find((s) => s.id === id) || {}).name || id;
-  const allTeams = Object.values(rosters).flatMap((bySport) => Object.values(bySport).flat());
+  const sportTeams = Object.values(rosters).flatMap((bySport) => Object.values(bySport).flat());
+  const generalTeamList = Object.values(generalRosters).flatMap((g) => (g.kind === "team" ? g.teams : []));
+  const allTeams = [...sportTeams, ...generalTeamList];
   const totalPlayers = allTeams.reduce((n, t) => n + (t.members ? t.members.length : 0), 0);
   const totalPending = allTeams.reduce((n, t) => n + (t.pendingReqs ? t.pendingReqs.length : 0), 0);
+  const totalSoloRegs = Object.values(generalRosters).reduce((n, g) => n + (g.kind === "individual" && g.regs ? g.regs.length : 0), 0);
+  const totalEvents = events.length + generalEvents.length;
+
+  // One team card (sport events and general team events share it).
+  function renderTeam(t) {
+    const memberIsOpen = (t.members || []).some((m) => m.uid === openPerson);
+    const reqIsOpen = (t.pendingReqs || []).some((r) => r.uid === openPerson);
+    return (
+      <div key={t.id} className="notice-card">
+        <div className="notice-top">
+          <b className="notice-title">{t.name}</b>
+          <span className={t.status === "locked" ? "dash-tag admin-tag" : "dash-tag"}>
+            {t.status === "locked" ? "■ locked" : `● ${t.count}/${t.maxPlayers}`}
+          </span>
+        </div>
+        <small className="admin-item-meta">captain {t.captainName}</small>
+        <div className="team-roster">
+          {(t.members || []).map((m) => (
+            <button
+              type="button"
+              key={m.uid}
+              className={(m.uid === t.captainUid ? "team-chip captain" : "team-chip") + (openPerson === m.uid ? " active" : "")}
+              onClick={() => togglePerson(m.uid)}
+              aria-expanded={openPerson === m.uid}
+            >
+              {m.uid === t.captainUid ? "★ " : ""}{m.name}
+            </button>
+          ))}
+        </div>
+        {memberIsOpen && (
+          <div className="person-details">
+            <PersonDetails person={byUid.get(openPerson)} fallbackName={(t.members || []).find((m) => m.uid === openPerson)?.name} />
+          </div>
+        )}
+        {t.pendingReqs && t.pendingReqs.length > 0 && (
+          <small className="admin-item-meta">
+            …awaiting captain:{" "}
+            {t.pendingReqs.map((r, i) => (
+              <span key={r.uid}>
+                {i > 0 ? ", " : ""}
+                <button type="button" className="person-name person-name-inline" onClick={() => togglePerson(r.uid)}>
+                  {r.name}
+                </button>
+              </span>
+            ))}
+          </small>
+        )}
+        {reqIsOpen && !memberIsOpen && (
+          <div className="person-details">
+            <PersonDetails person={byUid.get(openPerson)} fallbackName={(t.pendingReqs || []).find((r) => r.uid === openPerson)?.name} />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="admin-tab">
@@ -803,9 +881,10 @@ function ResultsTab() {
           <>
             <div className="maker-tags" aria-label="Totals">
               <span className="dash-tag">❧ {members.length} registered</span>
-              <span className="dash-tag">⚽ {events.length} events</span>
+              <span className="dash-tag">⚽ {totalEvents} events</span>
               <span className="dash-tag">★ {allTeams.length} teams</span>
               <span className="dash-tag">● {totalPlayers} players in</span>
+              <span className="dash-tag">◈ {totalSoloRegs} solo signups</span>
               <span className="dash-tag">… {totalPending} awaiting captain</span>
             </div>
 
@@ -842,84 +921,80 @@ function ResultsTab() {
             )}
 
             <p className="join-group-title">❧ event-wise rosters</p>
-            {events.length === 0 ? (
+            {totalEvents === 0 ? (
               <p className="join-sub">No events launched yet.</p>
             ) : (
-              events.map((ev) => (
-                <div key={ev.id} className="result-event">
-                  <div className="admin-item-top">
-                    <b>{ev.title}</b>
-                    <span className={ev.status === "open" ? "dash-tag" : "dash-tag admin-tag"}>
-                      {ev.status === "open" ? "● open" : "■ closed"}
-                    </span>
-                  </div>
-                  {(ev.sports || []).map((sid) => {
-                    const teams = (rosters[ev.id] && rosters[ev.id][sid]) || [];
-                    return (
-                      <div key={sid} className="result-sport">
-                        <p className="join-group-title">— {sportName(sid)} · {teams.length} team{teams.length === 1 ? "" : "s"}</p>
-                        {teams.length === 0 ? (
+              <>
+                {generalEvents.map((ev) => {
+                  const g = generalRosters[ev.id] || {};
+                  return (
+                    <div key={ev.id} className="result-event">
+                      <div className="admin-item-top">
+                        <b>{ev.title}</b>
+                        <span className={ev.status === "open" ? "dash-tag" : "dash-tag admin-tag"}>
+                          {ev.status === "open" ? "● open" : "■ closed"} · {ev.kind === "team" ? "team" : "individual"}
+                        </span>
+                      </div>
+                      {ev.kind === "team" ? (
+                        (g.teams || []).length === 0 ? (
                           <p className="join-sub">No teams yet.</p>
                         ) : (
-                          teams.map((t) => (
-                            <div key={t.id} className="notice-card">
-                              <div className="notice-top">
-                                <b className="notice-title">{t.name}</b>
-                                <span className={t.status === "locked" ? "dash-tag admin-tag" : "dash-tag"}>
-                                  {t.status === "locked" ? "■ locked" : `● ${t.count}/${t.maxPlayers}`}
-                                </span>
-                              </div>
-                              <small className="admin-item-meta">captain {t.captainName}</small>
-                              <div className="team-roster">
-                                {(t.members || []).map((m) => (
-                                  <button
-                                    type="button"
-                                    key={m.uid}
-                                    className={(m.uid === t.captainUid ? "team-chip captain" : "team-chip") + (openPerson === m.uid ? " active" : "")}
-                                    onClick={() => togglePerson(m.uid)}
-                                    aria-expanded={openPerson === m.uid}
-                                  >
-                                    {m.uid === t.captainUid ? "★ " : ""}{m.name}
-                                  </button>
-                                ))}
-                              </div>
-                              {(t.members || []).some((m) => m.uid === openPerson) && (
-                                <div className="person-details">
-                                  <PersonDetails
-                                    person={byUid.get(openPerson)}
-                                    fallbackName={(t.members || []).find((m) => m.uid === openPerson)?.name}
-                                  />
-                                </div>
-                              )}
-                              {t.pendingReqs && t.pendingReqs.length > 0 && (
-                                <small className="admin-item-meta">
-                                  …awaiting captain:{" "}
-                                  {t.pendingReqs.map((r, i) => (
-                                    <span key={r.uid}>
-                                      {i > 0 ? ", " : ""}
-                                      <button type="button" className="person-name person-name-inline" onClick={() => togglePerson(r.uid)}>
-                                        {r.name}
-                                      </button>
-                                    </span>
-                                  ))}
-                                </small>
-                              )}
-                              {(t.pendingReqs || []).some((r) => r.uid === openPerson) && !(t.members || []).some((m) => m.uid === openPerson) && (
-                                <div className="person-details">
-                                  <PersonDetails
-                                    person={byUid.get(openPerson)}
-                                    fallbackName={(t.pendingReqs || []).find((r) => r.uid === openPerson)?.name}
-                                  />
-                                </div>
-                              )}
+                          (g.teams || []).map((t) => renderTeam(t))
+                        )
+                      ) : (g.regs || []).length === 0 ? (
+                        <p className="join-sub">Nobody registered yet.</p>
+                      ) : (
+                        <>
+                          <div className="team-roster">
+                            {(g.regs || []).map((r) => (
+                              <button
+                                type="button"
+                                key={r.uid}
+                                className={"team-chip" + (openPerson === r.uid ? " active" : "")}
+                                onClick={() => togglePerson(r.uid)}
+                                aria-expanded={openPerson === r.uid}
+                              >
+                                {r.name}
+                              </button>
+                            ))}
+                          </div>
+                          {(g.regs || []).some((r) => r.uid === openPerson) && (
+                            <div className="person-details">
+                              <PersonDetails
+                                person={byUid.get(openPerson)}
+                                fallbackName={(g.regs || []).find((r) => r.uid === openPerson)?.name}
+                              />
                             </div>
-                          ))
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ))
+                          )}
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+                {events.map((ev) => (
+                  <div key={ev.id} className="result-event">
+                    <div className="admin-item-top">
+                      <b>{ev.title}</b>
+                      <span className={ev.status === "open" ? "dash-tag" : "dash-tag admin-tag"}>
+                        {ev.status === "open" ? "● open" : "■ closed"}
+                      </span>
+                    </div>
+                    {(ev.sports || []).map((sid) => {
+                      const teams = (rosters[ev.id] && rosters[ev.id][sid]) || [];
+                      return (
+                        <div key={sid} className="result-sport">
+                          <p className="join-group-title">— {sportName(sid)} · {teams.length} team{teams.length === 1 ? "" : "s"}</p>
+                          {teams.length === 0 ? (
+                            <p className="join-sub">No teams yet.</p>
+                          ) : (
+                            teams.map((t) => renderTeam(t))
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </>
             )}
           </>
         )}
