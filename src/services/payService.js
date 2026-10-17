@@ -90,10 +90,10 @@ export async function payAdminLogin(password) {
   try {
     const data = await apiFetch("/api/pay-admin/login", {
       method: "POST",
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ password: password || "open" }),
     });
-    setPayAdminToken(data.token);
-    return { ok: true };
+    setPayAdminToken(data.token || "open");
+    return { ok: true, open: !!data.open };
   } catch (err) {
     return friendlyError(err, "Couldn't reach the dashboard server.");
   }
