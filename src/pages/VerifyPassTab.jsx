@@ -69,9 +69,6 @@ export default function VerifyPassTab() {
   const stickerText = marked
     ? (marked.pass?.alreadyScanned ? "already scanned" : "entry marked")
     : (pass?.scanCount || 0) > 0 ? `scanned ${pass.scanCount}x before` : "verified";
-  const stickerText = marked
-    ? (marked.pass?.alreadyScanned ? "already scanned" : "entry marked")
-    : (pass?.scanCount || 0) > 0 ? `scanned ${pass.scanCount}x before` : "verified";
 
   return (
     <div className="admin-tab">
