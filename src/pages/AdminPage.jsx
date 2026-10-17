@@ -668,6 +668,59 @@ function SportsTab() {
   );
 }
 
+function PersonDetails({ person, fallbackName }) {
+  if (!person) {
+    return (
+      <dl className="dash-facts">
+        <div>
+          <dt>Name</dt>
+          <dd>{fallbackName || "—"}</dd>
+        </div>
+        <div>
+          <dt>Details</dt>
+          <dd>No profile on record.</dd>
+        </div>
+      </dl>
+    );
+  }
+  return (
+    <dl className="dash-facts">
+      <div>
+        <dt>Full name</dt>
+        <dd>{person.fullName || fallbackName || "—"}</dd>
+      </div>
+      <div>
+        <dt>Email</dt>
+        <dd>{person.email || "—"}</dd>
+      </div>
+      <div>
+        <dt>Phone</dt>
+        <dd>{person.phone || "—"}</dd>
+      </div>
+      <div>
+        <dt>Birth date</dt>
+        <dd>{person.birthDate || "—"}</dd>
+      </div>
+      <div>
+        <dt>Age</dt>
+        <dd>{displayAge(person) ?? "—"}</dd>
+      </div>
+      <div>
+        <dt>Role</dt>
+        <dd>{person.role === "admin" ? "★ admin" : "member"}</dd>
+      </div>
+      <div>
+        <dt>Joined</dt>
+        <dd>
+          {person.createdAt
+            ? new Date(person.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })
+            : "—"}
+        </dd>
+      </div>
+    </dl>
+  );
+}
+
 function ResultsTab() {
   const [loading, setLoading] = useState(true);
   const [members, setMembers] = useState([]);
@@ -675,6 +728,11 @@ function ResultsTab() {
   const [meta, setMeta] = useState({ sports: [] });
   const [rosters, setRosters] = useState({});
   const [formError, setFormError] = useState("");
+  const [openPerson, setOpenPerson] = useState(null);
+
+  const personKey = (u) => u.uid || u.id;
+  const byUid = new Map(members.map((u) => [personKey(u), u]));
+  const togglePerson = (uid) => setOpenPerson((cur) => (cur === uid ? null : uid));
 
   useEffect(() => {
     let alive = true;
@@ -747,13 +805,25 @@ function ResultsTab() {
                 {members.map((u) => (
                   <li key={u.id} className="admin-item admin-user">
                     <div className="admin-item-top">
-                      <b>{u.fullName || "—"}</b>
+                      <button
+                        type="button"
+                        className="person-name"
+                        onClick={() => togglePerson(personKey(u))}
+                        aria-expanded={openPerson === personKey(u)}
+                      >
+                        {u.fullName || "—"} {openPerson === personKey(u) ? "▾" : "▸"}
+                      </button>
                       <span className={u.role === "admin" ? "dash-tag admin-tag" : "dash-tag"}>{u.role === "admin" ? "★ admin" : "member"}</span>
                     </div>
                     <small className="admin-item-meta">
                       {u.email || "—"} · {u.phone || "no phone"} · age {displayAge(u) ?? "—"}
                       {u.createdAt ? ` · joined ${new Date(u.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}` : ""}
                     </small>
+                    {openPerson === personKey(u) && (
+                      <div className="person-details">
+                        <PersonDetails person={byUid.get(personKey(u))} fallbackName={u.fullName} />
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -790,15 +860,45 @@ function ResultsTab() {
                               <small className="admin-item-meta">captain {t.captainName}</small>
                               <div className="team-roster">
                                 {(t.members || []).map((m) => (
-                                  <span key={m.uid} className={m.uid === t.captainUid ? "team-chip captain" : "team-chip"}>
+                                  <button
+                                    type="button"
+                                    key={m.uid}
+                                    className={(m.uid === t.captainUid ? "team-chip captain" : "team-chip") + (openPerson === m.uid ? " active" : "")}
+                                    onClick={() => togglePerson(m.uid)}
+                                    aria-expanded={openPerson === m.uid}
+                                  >
                                     {m.uid === t.captainUid ? "★ " : ""}{m.name}
-                                  </span>
+                                  </button>
                                 ))}
                               </div>
+                              {(t.members || []).some((m) => m.uid === openPerson) && (
+                                <div className="person-details">
+                                  <PersonDetails
+                                    person={byUid.get(openPerson)}
+                                    fallbackName={(t.members || []).find((m) => m.uid === openPerson)?.name}
+                                  />
+                                </div>
+                              )}
                               {t.pendingReqs && t.pendingReqs.length > 0 && (
                                 <small className="admin-item-meta">
-                                  …awaiting captain: {t.pendingReqs.map((r) => r.name).join(", ")}
+                                  …awaiting captain:{" "}
+                                  {t.pendingReqs.map((r, i) => (
+                                    <span key={r.uid}>
+                                      {i > 0 ? ", " : ""}
+                                      <button type="button" className="person-name person-name-inline" onClick={() => togglePerson(r.uid)}>
+                                        {r.name}
+                                      </button>
+                                    </span>
+                                  ))}
                                 </small>
+                              )}
+                              {(t.pendingReqs || []).some((r) => r.uid === openPerson) && !(t.members || []).some((m) => m.uid === openPerson) && (
+                                <div className="person-details">
+                                  <PersonDetails
+                                    person={byUid.get(openPerson)}
+                                    fallbackName={(t.pendingReqs || []).find((r) => r.uid === openPerson)?.name}
+                                  />
+                                </div>
                               )}
                             </div>
                           ))

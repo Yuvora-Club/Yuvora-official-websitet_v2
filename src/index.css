@@ -1009,11 +1009,21 @@ footer::before {
 .team-list { display: grid; gap: 12px; margin-top: 14px; }
 .team-roster { display: flex; gap: 7px; flex-wrap: wrap; }
 .team-chip {
-  font-size: 12.5px; font-weight: 700;
+  font-size: 12.5px; font-weight: 700; font-family: inherit;
   background: var(--card); border: 1.5px solid #d9cdb4; border-radius: 999px;
-  padding: 5px 11px; color: var(--moss-deep);
+  padding: 5px 11px; color: var(--moss-deep); cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
+.team-chip:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.team-chip.active { border-color: var(--moss-deep); box-shadow: 0 0 0 2px rgba(46, 72, 50, 0.18); }
 .team-chip.captain { background: var(--moss-deep); border-color: var(--moss-deep); color: #eef2df; }
+.person-name {
+  background: none; border: none; padding: 0; font: inherit; font-weight: 800;
+  color: var(--moss-deep); cursor: pointer; text-align: left;
+}
+.person-name:hover { text-decoration: underline; }
+.person-name-inline { font-weight: 700; color: var(--ink); }
+.person-details { margin-top: 10px; }
 .team-bar { height: 8px; border-radius: 999px; background: #e6dcc4; overflow: hidden; }
 .team-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--moss), var(--clay)); border-radius: 999px; }
 .team-reqs { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 8px; }
