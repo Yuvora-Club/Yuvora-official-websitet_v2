@@ -118,6 +118,7 @@ function toPublicUser(u) {
     birthDate: u.birthDate || null,
     age: u.age ?? null,
     role: u.role || "member",
+    seedPassCode: u.seedPassCode || null,
     termsAcceptedAt: u.termsAcceptedAt,
     createdAt: u.createdAt,
   };

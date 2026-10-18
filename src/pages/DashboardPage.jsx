@@ -160,7 +160,13 @@ export default function DashboardPage() {
   const safeIdx = Number.isInteger(sproutIdx) && sproutIdx >= 0 && sproutIdx < SPROUTS.length ? sproutIdx : dailySproutSeed();
   const sprout = SPROUTS[safeIdx] || SPROUTS[0];
 
+  // Real backend code first (users/{uid}.seedPassCode) — the gate verifies THIS.
+  // Falls back to the old browser hash only when the profile has no code yet
+  // (e.g. a stale saved session from before the backend minted codes).
   const memberId = useMemo(() => {
+    if (user?.seedPassCode && /^YV-\d{4}$/.test(String(user.seedPassCode).trim().toUpperCase())) {
+      return String(user.seedPassCode).trim().toUpperCase();
+    }
     const src = (user && (user.id || user.email || user.name)) || "yuvora";
     let h = 0;
     for (let i = 0; i < src.length; i++) h = (Math.imul(h, 31) + src.charCodeAt(i)) >>> 0;
