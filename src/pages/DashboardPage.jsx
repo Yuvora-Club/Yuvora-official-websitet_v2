@@ -4,11 +4,12 @@
 // New bits (tabs, vibe, daily sprout, water streak, copy ID) are
 // localStorage-only play — no backend calls.
 
-import { useEffect, useMemo, useState } from "react";
-import { isAdminUser, logout } from "../services/authService.js";
+import { useEffect, useState } from "react";
+import { isAdminUser, logout, patchLiveSessionUser } from "../services/authService.js";
 import { navigate } from "../services/router.js";
 import { useAuth } from "../state/useAuth.js";
 import { listAnnouncements } from "../services/announcementsService.js";
+import { fetchMySeedPass } from "../services/sportsService.js";
 import SportsBoard from "../components/SportsBoard.jsx";
 import EventsBoard from "../components/EventsBoard.jsx";
 
@@ -115,6 +116,37 @@ export default function DashboardPage() {
   // Live notice board — whatever an admin posts on /admin sprouts here.
   const [announcements, setAnnouncements] = useState([]);
   const [annLoading, setAnnLoading] = useState(true);
+  // Seed-pass code — fetched LIVE from the backend (GET /api/my-seedpass),
+  // never hashed in the browser. Mints on first read for pre-existing members.
+  const [memberId, setMemberId] = useState("YV-····");
+  const [memberIdLive, setMemberIdLive] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      // Prefer the session copy (no extra call), then confirm live.
+      const sessionCode = String(user?.seedPassCode || "").trim().toUpperCase();
+      if (/^YV-\d{4}$/.test(sessionCode)) {
+        setMemberId(sessionCode);
+        setMemberIdLive(true);
+      }
+      const res = await fetchMySeedPass();
+      if (!alive) return;
+      if (res.ok && /^YV-\d{4}$/.test(res.code)) {
+        setMemberId(res.code);
+        setMemberIdLive(true);
+        // Cache into the session so the next visit is instant.
+        try {
+          patchLiveSessionUser({ seedPassCode: res.code });
+        } catch { /* cache is best-effort */ }
+      } else {
+        setMemberIdLive(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [user?.id]);
 
   useEffect(() => {
     let alive = true;
@@ -159,19 +191,6 @@ export default function DashboardPage() {
   const plant = plantFor(water.count);
   const safeIdx = Number.isInteger(sproutIdx) && sproutIdx >= 0 && sproutIdx < SPROUTS.length ? sproutIdx : dailySproutSeed();
   const sprout = SPROUTS[safeIdx] || SPROUTS[0];
-
-  // Real backend code first (users/{uid}.seedPassCode) — the gate verifies THIS.
-  // Falls back to the old browser hash only when the profile has no code yet
-  // (e.g. a stale saved session from before the backend minted codes).
-  const memberId = useMemo(() => {
-    if (user?.seedPassCode && /^YV-\d{4}$/.test(String(user.seedPassCode).trim().toUpperCase())) {
-      return String(user.seedPassCode).trim().toUpperCase();
-    }
-    const src = (user && (user.id || user.email || user.name)) || "yuvora";
-    let h = 0;
-    for (let i = 0; i < src.length; i++) h = (Math.imul(h, 31) + src.charCodeAt(i)) >>> 0;
-    return `YV-${String((h % 9000) + 1000)}`;
-  }, [user]);
 
   if (!user) {
     return (
@@ -280,7 +299,7 @@ export default function DashboardPage() {
               <b>{fullName}</b>
               <small>{user.email || "—"}</small>
               <button type="button" className="dash-id" onClick={onCopyId} title="Copy member ID">
-                {memberId} · {copied ? "copied ✓" : "tap to copy"}
+                {memberIdLive ? memberId : "fetching pass…"} · {copied ? "copied ✓" : "tap to copy"}
               </button>
             </div>
           </div>
@@ -387,7 +406,7 @@ export default function DashboardPage() {
                   <span className="dash-sticker" aria-hidden="true">seed pass ✿</span>
                   <div className="dash-pass-top">
                     <span>✿ YUVORA · {vibe.toUpperCase()}</span>
-                    <span>{memberId}</span>
+                    <span>{memberIdLive ? memberId : "fetching…"}</span>
                   </div>
                   <div className="dash-pass-name">{fullName}</div>
                   <div className="dash-pass-sub">
@@ -497,6 +516,10 @@ export default function DashboardPage() {
                   never stored here.
                 </p>
                 <dl className="dash-facts">
+                  <div>
+                    <dt>Member ID</dt>
+                    <dd>{memberIdLive ? memberId : "fetching from server…"}</dd>
+                  </div>
                   <div>
                     <dt>Full name</dt>
                     <dd>{user.fullName || user.name || "—"}</dd>

@@ -269,3 +269,13 @@ export async function fetchMyRegistrations() {
     return { ok: false, ...friendlyError(err), eventIds: [] };
   }
 }
+
+/** Live seed-pass code from the backend (mints on first read for old members). */
+export async function fetchMySeedPass() {
+  try {
+    const data = await apiFetchAuth("/api/my-seedpass");
+    return { ok: true, code: String(data.code || "").trim().toUpperCase() };
+  } catch (err) {
+    return { ok: false, ...friendlyError(err), code: "" };
+  }
+}
