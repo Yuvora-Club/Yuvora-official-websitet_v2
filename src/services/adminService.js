@@ -9,11 +9,14 @@ function friendlyError(err) {
   const payload = err && err.data;
   if (payload && payload.errors) return { ok: false, errors: payload.errors, sessionExpired };
   if (payload && payload.error) {
+    // Admin-only endpoint: a backend `detail` (the raw failure) is appended so
+    // gate errors are self-diagnosing instead of an opaque "try again".
+    const detail = payload.detail ? ` — ${payload.detail}` : "";
     return {
       ok: false,
       formError: sessionExpired
         ? "Admin session expired. Log in again, then retry."
-        : payload.error,
+        : `${payload.error}${detail}`,
       sessionExpired,
     };
   }
