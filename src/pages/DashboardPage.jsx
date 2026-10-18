@@ -117,19 +117,19 @@ export default function DashboardPage() {
   const [announcements, setAnnouncements] = useState([]);
   const [annLoading, setAnnLoading] = useState(true);
   // Seed-pass code — fetched LIVE from the backend (GET /api/my-seedpass),
-  // never hashed in the browser. Mints on first read for pre-existing members.
+  // never hashed in the browser. The session copy is only shown as a instant
+  // placeholder until the live fetch confirms it — a stale cached code can
+  // never masquerade as the real one.
   const [memberId, setMemberId] = useState("YV-····");
   const [memberIdLive, setMemberIdLive] = useState(false);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      // Prefer the session copy (no extra call), then confirm live.
+      // Instant placeholder from the session (never marked live yet).
       const sessionCode = String(user?.seedPassCode || "").trim().toUpperCase();
-      if (/^YV-\d{4}$/.test(sessionCode)) {
-        setMemberId(sessionCode);
-        setMemberIdLive(true);
-      }
+      if (/^YV-\d{4}$/.test(sessionCode)) setMemberId(sessionCode);
+      // Always confirm against the backend — this is the source of truth.
       const res = await fetchMySeedPass();
       if (!alive) return;
       if (res.ok && /^YV-\d{4}$/.test(res.code)) {
@@ -140,6 +140,7 @@ export default function DashboardPage() {
           patchLiveSessionUser({ seedPassCode: res.code });
         } catch { /* cache is best-effort */ }
       } else {
+        // Live fetch failed — do NOT trust the session copy; say so honestly.
         setMemberIdLive(false);
       }
     })();
