@@ -115,20 +115,71 @@ const SPORTS = [
 
 const FAQS = [
   {
+    q: "What is Yuvora?",
+    a: "Yuvora is a student-led club that brings people together to explore ideas, develop skills, join activities, and build real connections.",
+  },
+  {
+    q: "What does “Play. Build. Gather.” mean?",
+    a: "Our three sections: Play is sports leagues, Build is coding + electronics workshops with Hack Club, and Gather is summits, fairs, hackathons and music nights.",
+  },
+  {
+    q: "Who can join Yuvora?",
+    a: "Any student who wants to explore interests, learn new things, collaborate with others, and be part of a community.",
+  },
+  {
+    q: "Is Yuvora only for students with experience?",
+    a: "Not at all. Beginners and experienced students are both welcome — curiosity, creativity, and a willingness to learn are what matter.",
+  },
+  {
+    q: "What activities does Yuvora organize?",
+    a: "Sports leagues, coding + electronics workshops, summits, tech fairs, hackathons, open-mics and music nights. The exact schedule is announced on this site and on Instagram.",
+  },
+  {
+    q: "Does Yuvora organize events and meetups?",
+    a: "Yes. Check Yuvora.org and our official Instagram (@the_yuvora_club) for announcements.",
+  },
+  {
+    q: "How can I become a member of Yuvora?",
+    a: "Hit Join Us on this site, verify your email with the OTP code, and you're on the roster. A senior will reach out next.",
+  },
+  {
+    q: "Do I need special skills to participate?",
+    a: "No. Start with whatever interests you have, and build new skills by learning, experimenting, and collaborating with other students.",
+  },
+  {
+    q: "Can I work on projects with other students?",
+    a: "Yes — collaboration is the point. Watch the Build section and the dashboard announcements for current projects.",
+  },
+  {
+    q: "How can I stay updated about upcoming events?",
+    a: "Visit Yuvora.org regularly and follow @the_yuvora_club on Instagram for the latest announcements and updates.",
+  },
+  {
+    q: "Can I suggest an idea or propose an event?",
+    a: "Yes — email the team with your idea and we'll review it for a future activity.",
+  },
+  {
+    q: "How can I contact the Yuvora team?",
+    a: (
+      <span>
+        Tap a line to reach a human —{" "}
+        <a href="mailto:yuvoraclub.official@gmail.com" style={{ fontWeight: 700, color: "var(--ink)" }}>yuvoraclub.official@gmail.com</a>
+        {" · "}
+        <a href="https://instagram.com/the_yuvora_club" target="_blank" rel="noreferrer" style={{ fontWeight: 700, color: "var(--ink)" }}>@the_yuvora_club</a>
+      </span>
+    ),
+  },
+  {
     q: "Is Yuvora really 100% student-led?",
     a: "Yes. Seniors handle the work (booking grounds, setting brackets, managing cash), juniors help out (volunteering, refereeing, clean-up) and take over with time. No faculty committee, no adult manager.",
   },
   {
     q: "How much is the entry fee for sports?",
-      a: "Fair fees — roughly ₹100–₹200 per player depending on ground cost. Every season we pin a handwritten split on the board: ground + gear + ref.",
+    a: "Fair fees — roughly ₹100–₹200 per player depending on ground cost. Every season we pin a handwritten split on the board: ground + gear + ref.",
   },
   {
-      q: "Do Hack Club grants run the club?",
-      a: "No — Yuvora runs on its own sports entry fees and is never dependent on grants or rewards. Hack Club funding only covers specific STEM events (tech fairs, hackathons, hardware). And anything you earn by shipping — swag, grants, glory — stays 100% yours.",
-  },
-  {
-    q: "I'm not sporty or techy. Can I still join?",
-    a: "That's what the Gather section is for — entrepreneur summits, tech fairs, open-mics, music nights and casual hangouts. Pick Raver / Founder / Volunteer on your pass. Plenty of members never touch a ball or a keyboard.",
+    q: "Do Hack Club grants run the club?",
+    a: "No — Yuvora runs on its own sports entry fees and is never dependent on grants or rewards. Hack Club funding only covers specific STEM events (tech fairs, hackathons, hardware). And anything you earn by shipping — swag, grants, glory — stays 100% yours.",
   },
   {
     q: "Are the music nights / raves safe?",
@@ -723,6 +774,14 @@ export default function App() {
               {openFaq === i && <div className="ans">{f.a}</div>}
             </div>
           ))}
+        </div>
+        <div className="reveal" style={{ marginTop: 22, border: "var(--line)", borderRadius: 16, padding: "18px 20px", background: "var(--card)", boxShadow: "var(--shadow-sm)" }}>
+          <h3 style={{ fontFamily: "var(--display)", fontSize: 24, margin: "0 0 6px" }}>Still have questions?</h3>
+          <p style={{ margin: "0 0 14px", color: "var(--muted)", fontWeight: 500, lineHeight: 1.65 }}>We'd be happy to hear from you. Reach out to the team and stay connected with the community.</p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <a className="btn btn-clay" href="mailto:yuvoraclub.official@gmail.com?subject=Yuvora%20question">Email the team →</a>
+            <a className="btn btn-paper" href="https://instagram.com/the_yuvora_club" target="_blank" rel="noreferrer">DM on Instagram ↗</a>
+          </div>
         </div>
       </section>
       </>
