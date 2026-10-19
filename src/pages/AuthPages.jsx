@@ -87,7 +87,32 @@ export function GoogleButton({ next }) {
     };
   }, [available, next]);
 
-  if (!available) return null;
+  if (!available) {
+    // Preview mode so the button placement is visible before Google setup.
+    // Once VITE_GOOGLE_CLIENT_ID is set, the real GIS button replaces this.
+    return (
+      <div className="auth-google">
+        <div className="auth-alt" role="separator" aria-label="or continue with Google">
+          <span className="auth-alt-line" aria-hidden="true" />
+          <span className="auth-alt-label">or</span>
+          <span className="auth-alt-line" aria-hidden="true" />
+        </div>
+        <button
+          type="button"
+          className="btn btn-paper"
+          disabled
+          title="Set VITE_GOOGLE_CLIENT_ID to enable Google sign-in"
+          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, opacity: 0.85, cursor: "not-allowed" }}
+        >
+          <span aria-hidden="true" style={{ fontWeight: 800 }}>G</span>
+          Continue with Google
+        </button>
+        <p className="ev-formerror" role="note" style={{ fontSize: 12 }}>
+          Preview — add VITE_GOOGLE_CLIENT_ID in Frontend/.env to switch it on.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="auth-google">
       <div className="auth-alt" role="separator" aria-label="or continue with Google">
