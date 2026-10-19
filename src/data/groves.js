@@ -12,7 +12,7 @@
 // sample schedule with placeholder dates/fees/seats). That file is preserved
 // untouched; this one follows the finalized application rules.
 
-export const INDICATIVE_CONTRIBUTION_LABEL = "Expected contribution: around ₹50–₹100 per person. Final details will be confirmed later.";
+export const INDICATIVE_CONTRIBUTION_LABEL = "Expected contribution: around ₹100–₹200 per person. Final details will be confirmed later.";
 export const FREE_LABEL = "Free to attend";
 export const TBA_LABEL = "Date to be announced";
 

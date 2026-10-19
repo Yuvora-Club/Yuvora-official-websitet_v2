@@ -11,11 +11,11 @@ export function TermsPage() {
         <p>Placeholder page — friendly rules coming soon. Nothing binding yet.</p>
       </div>
       <div className="join-card reveal in">
-        <h3>Seedling promise (draft)</h3>
+        <h3>Member promise (draft)</h3>
         <ol className="legal-list">
           <li>Be kind on the field, in the greenhouse, and after dark.</li>
           <li>Student-only events · ID checked · wrap by 10pm.</li>
-          <li>Your ships are yours — club merch waters the shared grove.</li>
+          <li>Your ships are yours — rewards you earn are 100% yours.</li>
         </ol>
         <p className="join-sub">Full legal text will be added before real sign-ups open.</p>
         <div className="join-actions">

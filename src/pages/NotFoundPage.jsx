@@ -9,8 +9,8 @@ export default function NotFoundPage({ path }) {
           Wandered <em>off the trail?</em>
         </h2>
         <p>
-          This patch hasn&apos;t been sown yet — no match, no workshop, no rave
-          down this path. <b>The grove is right behind you.</b>
+          Nothing here yet — no match, no workshop, no event
+          down this path. <b>The club is right behind you.</b>
         </p>
       </div>
 
@@ -27,8 +27,7 @@ export default function NotFoundPage({ path }) {
           4<span>0</span>4
         </div>
         <p className="lost-sub">
-          Smells of dust + evening chai that way — come dewy-eyed, leave
-          dusty-shoed. Just not down this path.
+          Head back and pick something good. Just not down this path.
         </p>
         <div className="lost-trail">
           trail log: nothing planted at <b>{trail}</b> · water: none needed

@@ -2,7 +2,7 @@
 //
 // Play / Build / Gather selector, selectable event cards, shuffle interaction,
 // dynamic application form and honest demo submission. No dates, no capacity,
-// no availability tracking; Play + Build show an INDICATIVE ₹50–₹100
+// no availability tracking; Play + Build show an INDICATIVE ₹100–₹200
 // contribution, Gather is free, online payment is a future preference only.
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
@@ -408,13 +408,13 @@ export default function GroveApply({ user }) {
 
       {groveId === "build" && (
         <div className="grove-buildintro">
-          <b className="grove-buildline">You ship. You keep. The grove still drinks.</b>
+          <b className="grove-buildline">STEM nights are funded by Hack Club. The club isn't dependent.</b>
           <p>
-            Personal Hack Club rewards stay with the shipper — tees, stickers, grants, glory. Separately, Yuvora event
-            merch (sold at matches + summits) flows into one shared watering can for grounds, speakers and sound.
+            Tech fairs, hackathons and hardware come via Hack Club funding — and anything you earn by
+            shipping stays 100% yours. Yuvora itself runs on its own sports entry fees, never on grants.
           </p>
           <div className="grove-pills" aria-label="Funding rules">
-            {["soil: shared fund", "petals: personal", "water: transparent"].map((p) => (
+            {["stem: funded by hack club", "rewards: personal", "club: independent"].map((p) => (
               <span key={p} className="pill light">{p}</span>
             ))}
           </div>
@@ -471,7 +471,7 @@ export default function GroveApply({ user }) {
               </div>
               <div className="sport-body">
                 <span className={`tag ${event.kind === "duo" ? "duo" : ""}`}>● {event.category}</span>
-                <span className={event.priced ? "tag grove-tag-pay" : "tag grove-tag-free"}>{event.priced ? "≈ ₹50–100 · indicative" : "free"}</span>
+                <span className={event.priced ? "tag grove-tag-pay" : "tag grove-tag-free"}>{event.priced ? "≈ ₹100–200 · indicative" : "free"}</span>
                 <span className="tag grove-tag-tba">{TBA_LABEL}</span>
                 <dl>
                   <div><dt>Format</dt><dd>{event.format}</dd></div>
@@ -479,7 +479,7 @@ export default function GroveApply({ user }) {
                 </dl>
                 <p className="sport-note">{event.description}{event.whisper ? (<><br /><em>↳ {event.whisper}</em></>) : null}</p>
                 <div className="fee-row">
-                  <span>{event.priced ? "≈ ₹50–100 · indicative" : "Free to attend"}</span>
+                  <span>{event.priced ? "≈ ₹100–200 · indicative" : "Free to attend"}</span>
                   <span>{TBA_LABEL}</span>
                 </div>
               </div>

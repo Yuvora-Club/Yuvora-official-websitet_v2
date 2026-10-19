@@ -116,7 +116,7 @@ export default function MembersPage() {
         <p>
           The students behind Yuvora — the ones who book the grounds, run the
           workshops and light the terrace.{" "}
-          <b>Say hello, join a grove, grow with us.</b>
+          <b>Say hello, join a section, be part of it.</b>
         </p>
       </div>
 

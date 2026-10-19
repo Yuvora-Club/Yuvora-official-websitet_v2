@@ -56,8 +56,8 @@ export default function EventsPage() {
           Find your <em>gathering</em>
         </h2>
         <p>
-          Leagues, jams and summits with honest sign-ups. Pick a grove, open an event, and apply —{" "}
-          <b>your Seed Pass grows only from a confirmed application.</b>
+          Leagues, jams and summits with honest sign-ups. Pick a section, open an event, and apply —{" "}
+          <b>your Seed Pass activates only after a confirmed application.</b>
         </p>
       </div>
 
@@ -79,8 +79,8 @@ export default function EventsPage() {
 
       {events.length === 0 ? (
         <div className="note-bar reveal in">
-          <b>EMPTY PATCH →</b>
-          <span>No events in this grove right now. Try another category.</span>
+          <b>NOTHING HERE →</b>
+          <span>No events in this section right now. Try another category.</span>
         </div>
       ) : (
         <div className="sports">

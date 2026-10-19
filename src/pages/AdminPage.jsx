@@ -1685,7 +1685,7 @@ export default function AdminPage({ user }) {
         <div className="sec-head reveal in">
           <span className="sec-no">★ admin</span>
           <h2>
-            Admin <em>grove gate</em>
+            Admin <em>gate</em>
           </h2>
           <p>Sign in as an admin to post announcements and manage users.</p>
         </div>

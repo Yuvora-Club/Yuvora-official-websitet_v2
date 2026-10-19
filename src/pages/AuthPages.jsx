@@ -191,24 +191,24 @@ export function LoginPage({ next }) {
           <h3>
             Back to
             <br />
-            the grove.
+            the club.
           </h3>
           <p className="auth-side-sub">
-            Your leagues, builds &amp; moon socials waited — dust off your shoes.
+            Your leagues, builds &amp; music nights waited — dust off your shoes.
           </p>
           <ul className="auth-points">
             <li>
               <span className="auth-ic" aria-hidden="true">☀</span>
               <div>
                 <b>Member dashboard</b>
-                <small>passes, notices &amp; grove news</small>
+                <small>passes, notices &amp; club news</small>
               </div>
             </li>
             <li>
               <span className="auth-ic" aria-hidden="true">⌨</span>
               <div>
                 <b>Play · Build · Gather</b>
-                <small>one login for all three groves</small>
+                <small>one login for all three sections</small>
               </div>
             </li>
             <li>
@@ -311,19 +311,19 @@ export function RegisterPage({ next }) {
       </div>
       <div className="auth-grid reveal in">
         <aside className="auth-side auth-side-clay" aria-label="What you get">
-          <span className="auth-kicker">✿ seedling · takes 30 seconds</span>
+          <span className="auth-kicker">✿ new here · takes 30 seconds</span>
           <h3>
-            Sow your
+            Create your
             <br />
-            first seed.
+            account.
           </h3>
           <p className="auth-side-sub">
-            One demo account to wander all three groves — no fees, no spam.
+            One demo account to try all three sections — no fees, no spam.
           </p>
           <ol className="auth-steps">
-            <li><b>1</b><span>Sow — name, email &amp; phone</span></li>
-            <li><b>2</b><span>Sprout — pick a strong password</span></li>
-            <li><b>3</b><span>Shade — log in &amp; get your pass</span></li>
+            <li><b>1</b><span>Details — name, email &amp; phone</span></li>
+            <li><b>2</b><span>Password — pick a strong one</span></li>
+            <li><b>3</b><span>Done — log in &amp; get your pass</span></li>
           </ol>
           <div className="auth-seal-row">
             <span className="auth-seal">✿ PLAY · BUILD · GATHER</span>
@@ -333,7 +333,7 @@ export function RegisterPage({ next }) {
 
         <div className="auth-card">
           <div className="auth-card-top">
-            <span className="auth-card-kicker">❧ seed packet · demo sowing</span>
+            <span className="auth-card-kicker">❧ new account · demo</span>
             <span className="auth-card-dot" aria-hidden="true">● ● ●</span>
           </div>
           <div className="auth-demo">
@@ -364,11 +364,11 @@ export function RegisterPage({ next }) {
             <PasswordField id="reg-password" label="Password (min 8 characters)" value={password} onChange={setPassword} error={errors.password} describedBy="reg-password-err" />
             <PasswordField id="reg-confirm" label="Confirm password" value={confirm} onChange={setConfirm} error={errors.confirm} describedBy="reg-confirm-err" />
             <button className="btn btn-clay auth-submit" type="submit" disabled={busy}>
-              {busy ? "Sowing… (demo)" : "Create demo account →"}
+              {busy ? "Creating… (demo)" : "Create demo account →"}
             </button>
             <GoogleButton next={next} />
             <p className="ev-switch auth-switch auth-switch-center">
-              Already growing here? <a href={`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}>Sign in →</a>
+              Already a member? <a href={`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}>Sign in →</a>
             </p>
           </form>
         </div>

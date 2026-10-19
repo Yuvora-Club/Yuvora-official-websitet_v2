@@ -215,7 +215,7 @@ export default function JoinPage() {
           </h2>
           <p>
             <b>{joined.fullName || "Seedling"}</b>, you&apos;re on the roster —
-            we saved <b>{joined.email}</b> to the grove database.
+              we saved <b>{joined.email}</b> to the club database.
           </p>
         </div>
         <div className="auth-grid join-grid reveal in">
@@ -249,11 +249,11 @@ export default function JoinPage() {
               stay close.
             </h3>
             <p className="auth-side-sub">
-              You&apos;re planted. A senior waters next — then your seed pass.
+              You&apos;re in. A senior will reach out — then your member pass.
             </p>
             <ol className="auth-steps">
               <li><b>1</b><span>Verify email + phone when a senior reaches out.</span></li>
-              <li><b>2</b><span>Pick a grove — Play, Build or Gather.</span></li>
+              <li><b>2</b><span>Pick a section — Play, Build or Gather.</span></li>
               <li><b>3</b><span>Get your seed pass after a senior says hi.</span></li>
             </ol>
             <div className="auth-seal-row">
@@ -274,7 +274,7 @@ export default function JoinPage() {
           Join <em>Yuvora</em>
         </h2>
         <p>
-          One form for the whole grove — <b>Play · Build · Gather</b>. Fill it in
+          One form for the whole club — <b>Play · Build · Gather</b>. Fill it in
           and you&apos;re <b>registered on the live backend</b>.
         </p>
       </div>
@@ -283,26 +283,26 @@ export default function JoinPage() {
         <aside className="auth-side" aria-label="How joining grows">
           <span className="auth-kicker">✿ live registration · ~1 min</span>
           <h3>
-            Plant yourself
+            Join
             <br />
-            in the grove.
+            the club.
           </h3>
           <p className="auth-side-sub">
-            One sowing for leagues, workshops, summits &amp; moon socials.
+            One form for leagues, workshops, summits &amp; music nights.
           </p>
           <ul className="auth-points">
             <li>
               <span className="auth-ic" aria-hidden="true">☀</span>
               <div>
                 <b>Instant live roster</b>
-                <small>saved to the grove database</small>
+                <small>saved to the club database</small>
               </div>
             </li>
             <li>
               <span className="auth-ic" aria-hidden="true">⌨</span>
               <div>
                 <b>Play · Build · Gather</b>
-                <small>pick your grove after joining</small>
+                <small>pick your section after joining</small>
               </div>
             </li>
             <li>
@@ -314,7 +314,7 @@ export default function JoinPage() {
             </li>
           </ul>
           <div className="auth-note">
-            <b>SOIL NOTE →</b>
+            <b>NOTE →</b>
             <span>No spam, no fees to join. Just dusty shoes + curiosity.</span>
           </div>
           <div className="auth-seal-row">
@@ -325,11 +325,11 @@ export default function JoinPage() {
 
         <div className="auth-card">
           <div className="auth-card-top">
-            <span className="auth-card-kicker">❧ seedling form · live sowing</span>
+            <span className="auth-card-kicker">❧ member form · live</span>
             <span className="auth-card-dot" aria-hidden="true">● ● ●</span>
           </div>
           <form className="join-card join-form auth-form" onSubmit={onSubmit} noValidate>
-            <h3 className="auth-title">Seedling application 🌱</h3>
+            <h3 className="auth-title">Member application 🌱</h3>
             <p className="auth-sub join-sub">
               Submits to the live registration endpoint.
             </p>
@@ -499,7 +499,7 @@ export default function JoinPage() {
 
             <div className="join-actions">
               <button className="btn btn-clay auth-submit" type="submit" disabled={busy || !otpVerified}>
-                {busy ? "Planting… →" : otpVerified ? "Apply to join →" : "Verify email to apply →"}
+                {busy ? "Joining… →" : otpVerified ? "Apply to join →" : "Verify email to apply →"}
               </button>
               <a className="btn btn-paper" href="/">
                 ← Back to sunlight
@@ -507,7 +507,7 @@ export default function JoinPage() {
             </div>
             <GoogleButton next={null} />
             <p className="ev-switch auth-switch auth-switch-center">
-              Already growing here? <a href="/login">Log in →</a>
+              Already a member? <a href="/login">Log in →</a>
             </p>
           </form>
         </div>

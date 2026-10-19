@@ -28,11 +28,11 @@ const VIBES = [
 ];
 
 const SPROUTS = [
-  { text: "Say hi to one new face in your grove today.", tag: "tiny + brave" },
-  { text: "Sketch your dream seed-pass in the logbook.", tag: "doodle break" },
-  { text: "Teach someone one thing you learned this week.", tag: "shade others" },
+  { text: "Say hi to one new face in the club today.", tag: "tiny + brave" },
+  { text: "Sketch your dream member pass in a notebook.", tag: "doodle break" },
+  { text: "Teach someone one thing you learned this week.", tag: "help others" },
   { text: "Walk a field you have never played on.", tag: "touch grass" },
-  { text: "Demo something half-broken. Loud applause anyway.", tag: "build grove" },
+  { text: "Demo something half-broken. Loud applause anyway.", tag: "build" },
   { text: "Write one line about tonight's moon. Keep it.", tag: "after dark" },
 ];
 
@@ -201,7 +201,7 @@ export default function DashboardPage() {
           <h2>
             Sign in to see your <em>dashboard</em>
           </h2>
-          <p>Your grove notices live here — members only.</p>
+          <p>Your club notices live here — members only.</p>
         </div>
         <div className="dash-gate reveal in">
           <div className="dash-gate-card">
@@ -284,7 +284,7 @@ export default function DashboardPage() {
           Welcome, <em>{firstName}</em>
         </h2>
         <p>
-          Your corner of the grove — notices first, everything else as it
+          Your corner of the club — notices first, everything else as it
           grows. Feeling <b>{vibeInfo.icon} {vibe.toLowerCase()}</b> today?{" "}
           <span className="dash-hand-inline">{vibeInfo.blurb} —</span>
         </p>
@@ -471,7 +471,7 @@ export default function DashboardPage() {
                 ) : announcements.length === 0 ? (
                   <div className="notice-empty">
                     <span className="notice-empty-leaf" aria-hidden="true">❧</span>
-                    <b>Quiet grove — nothing pinned yet.</b>
+                    <b>All quiet — nothing pinned yet.</b>
                     <p>When the crew posts a notice, it appears here in order.</p>
                   </div>
                 ) : (
