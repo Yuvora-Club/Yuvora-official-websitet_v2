@@ -195,6 +195,63 @@ export async function requestPasswordReset(email) {
   }
 }
 
+/**
+ * LIVE Google sign-in — exchanges the Google Identity Services credential
+ * (an ID token JWT) for a Yuvora session via POST /api/auth/google. Works
+ * for both sign-in and one-tap sign-up: the backend auto-creates the
+ * profile for first-time Google users. Same return shape as loginLive.
+ */
+export async function loginWithGoogle(credential) {
+  try {
+    const data = await apiFetch("/api/auth/google", {
+      method: "POST",
+      body: JSON.stringify({ credential }),
+    });
+    const user = saveLiveSession(data.user, data.idToken, data.refreshToken);
+    return { ok: true, user, isNewUser: data.isNewUser === true };
+  } catch (err) {
+    const payload = err && err.data;
+    if (payload && payload.error) return { ok: false, formError: payload.error };
+    return { ok: false, formError: "Google sign-in couldn't reach the server. Check your connection and try again." };
+  }
+}
+
+/**
+ * LIVE email OTP — Join registration gate.
+ * requestEmailOtp(email) -> POST /api/auth/otp/request
+ * verifyEmailOtp(email, otp) -> POST /api/auth/otp/verify
+ * Both resolve { ok:true } | { ok:false, errors|formError } and never throw.
+ */
+export async function requestEmailOtp(email) {
+  try {
+    await apiFetch("/api/auth/otp/request", {
+      method: "POST",
+      body: JSON.stringify({ email: (email || "").trim().toLowerCase() }),
+    });
+    return { ok: true };
+  } catch (err) {
+    const payload = err && err.data;
+    if (payload && payload.errors) return { ok: false, errors: payload.errors };
+    if (payload && payload.error) return { ok: false, formError: payload.error };
+    return { ok: false, formError: "Couldn't send the code. Check your connection and try again." };
+  }
+}
+
+export async function verifyEmailOtp(email, otp) {
+  try {
+    await apiFetch("/api/auth/otp/verify", {
+      method: "POST",
+      body: JSON.stringify({ email: (email || "").trim().toLowerCase(), otp: String(otp || "") }),
+    });
+    return { ok: true };
+  } catch (err) {
+    const payload = err && err.data;
+    if (payload && payload.errors) return { ok: false, errors: payload.errors };
+    if (payload && payload.error) return { ok: false, formError: payload.error };
+    return { ok: false, formError: "Couldn't check the code. Check your connection and try again." };
+  }
+}
+
 export function validateRegistration({ name, email, phone, password, confirm }) {
   const errors = {};
   const cleanName = (name || "").trim();

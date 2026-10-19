@@ -6,9 +6,10 @@
 // All label htmlFor / input IDs, button behavior, href paths, and the
 // apiFetch + saveLiveSession + navigate flow are intentionally untouched.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { apiFetch } from "../services/api.js";
-import { saveLiveSession } from "../services/authService.js";
+import { requestEmailOtp, saveLiveSession, verifyEmailOtp } from "../services/authService.js";
+import { GoogleButton } from "./AuthPages.jsx";
 import { navigate } from "../services/router.js";
 
 function FieldErr({ message }) {
@@ -63,6 +64,74 @@ export default function JoinPage() {
   const [busy, setBusy] = useState(false);
   const [joined, setJoined] = useState(null);
 
+  // Email OTP gate — registration is blocked until the primary email is
+  // verified (Send OTP -> 6-digit code -> Verify). Google sign-ups skip
+  // this because Google already verified that address.
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState("");
+  const [otpBusy, setOtpBusy] = useState(false);
+  const [otpError, setOtpError] = useState("");
+  const [otpInfo, setOtpInfo] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return undefined;
+    const t = setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  // Changing the email after verifying invalidates the check.
+  function onEmailChange(v) {
+    setEmail(v);
+    if (otpVerified && v.trim().toLowerCase() !== verifiedEmail) {
+      setOtpVerified(false);
+      setVerifiedEmail("");
+      setOtpInfo("");
+    }
+  }
+
+  async function onSendOtp() {
+    setOtpError("");
+    setOtpInfo("");
+    const clean = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(clean)) {
+      setOtpError("Enter a valid email address first, then tap Send OTP.");
+      return;
+    }
+    setOtpBusy(true);
+    const res = await requestEmailOtp(clean);
+    setOtpBusy(false);
+    if (!res.ok) {
+      setOtpError(res.errors?.email || res.formError || "Couldn't send the code. Try again.");
+      return;
+    }
+    setOtpSent(true);
+    setCooldown(60);
+    setOtpInfo(`Code sent to ${clean} — check inbox + spam, it expires in 10 min.`);
+  }
+
+  async function onVerifyOtp() {
+    setOtpError("");
+    setOtpInfo("");
+    const clean = email.trim().toLowerCase();
+    if (!/^\d{6}$/.test(otp.trim())) {
+      setOtpError("Enter the 6-digit code from your email.");
+      return;
+    }
+    setOtpBusy(true);
+    const res = await verifyEmailOtp(clean, otp.trim());
+    setOtpBusy(false);
+    if (!res.ok) {
+      setOtpError(res.errors?.otp || res.errors?.email || res.formError || "Wrong code. Try again.");
+      return;
+    }
+    setOtpVerified(true);
+    setVerifiedEmail(clean);
+    setOtpInfo("Email verified — you can now Apply to join.");
+  }
+
   const passwordsMatch = !confirm || password === confirm;
 
   async function onSubmit(e) {
@@ -71,6 +140,12 @@ export default function JoinPage() {
     setFieldErrors({});
     if (!passwordsMatch) {
       setFieldErrors({ confirm: "Passwords don't match yet." });
+      return;
+    }
+    // Hard gate: no verified OTP -> no registration.
+    if (!otpVerified || email.trim().toLowerCase() !== verifiedEmail) {
+      setFieldErrors({ email: "Please verify your email with the OTP first — tap Send OTP, enter the code, then Verify." });
+      setFormError("Verify your email first, then Apply to join.");
       return;
     }
     setBusy(true);
@@ -286,12 +361,51 @@ export default function JoinPage() {
                   id="join-email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => onEmailChange(e.target.value)}
                   placeholder="you@college.edu"
                   autoComplete="email"
                 />
               </label>
               <FieldErr message={fieldErrors.email} />
+
+              <div className="join-otp" style={{ marginTop: 10, border: "1.5px dashed #d9a441", borderRadius: 12, padding: 12, background: "#fdf6e3" }}>
+                <p className="join-group-title" style={{ margin: "0 0 8px" }}>✿ verify email — OTP required</p>
+                {!otpVerified ? (
+                  <>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button type="button" className="btn btn-paper" onClick={onSendOtp} disabled={otpBusy || cooldown > 0} style={{ fontSize: 13 }}>
+                        {otpBusy ? "Sending…" : otpSent ? (cooldown > 0 ? `Resend OTP (${cooldown}s)` : "Resend OTP") : "Send OTP →"}
+                      </button>
+                    </div>
+                    {otpSent && (
+                      <label className="field auth-field join-field" htmlFor="join-otp" style={{ marginTop: 10 }}>
+                        <span className="auth-label">6-digit code (check inbox + spam)</span>
+                        <span style={{ display: "flex", gap: 8 }}>
+                          <input
+                            id="join-otp"
+                            type="text"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                            placeholder="e.g. 482913"
+                            inputMode="numeric"
+                            maxLength={6}
+                            style={{ letterSpacing: "0.3em", fontWeight: 800 }}
+                          />
+                          <button type="button" className="btn btn-clay" onClick={onVerifyOtp} disabled={otpBusy || otp.length !== 6} style={{ whiteSpace: "nowrap", fontSize: 13 }}>
+                            {otpBusy ? "Checking…" : "Verify"}
+                          </button>
+                        </span>
+                      </label>
+                    )}
+                  </>
+                ) : (
+                  <p className="ev-success" role="status" style={{ margin: 0 }}>
+                    ✓ {verifiedEmail} verified — you can now Apply to join.
+                  </p>
+                )}
+                {otpError && <p className="join-error" role="alert" style={{ marginBottom: 0 }}>{otpError}</p>}
+                {otpInfo && !otpVerified && <p className="ev-success" role="status" style={{ marginBottom: 0 }}>{otpInfo}</p>}
+              </div>
 
               <label className="field auth-field join-field" htmlFor="join-altemail">
                 <span className="auth-label">Alternate email <span className="opt">(optional)</span></span>
@@ -384,13 +498,14 @@ export default function JoinPage() {
             <FieldErr message={fieldErrors.accepted} />
 
             <div className="join-actions">
-              <button className="btn btn-clay auth-submit" type="submit" disabled={busy}>
-                {busy ? "Planting… →" : "Apply to join →"}
+              <button className="btn btn-clay auth-submit" type="submit" disabled={busy || !otpVerified}>
+                {busy ? "Planting… →" : otpVerified ? "Apply to join →" : "Verify email to apply →"}
               </button>
               <a className="btn btn-paper" href="/">
                 ← Back to sunlight
               </a>
             </div>
+            <GoogleButton next={null} />
             <p className="ev-switch auth-switch auth-switch-center">
               Already growing here? <a href="/login">Log in →</a>
             </p>

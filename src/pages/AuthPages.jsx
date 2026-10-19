@@ -3,8 +3,9 @@
 // aria wiring, and authService calls (loginLive / register /
 // requestPasswordReset) are intentionally untouched.
 
-import { useState } from "react";
-import { AUTH_MODE_NOTICE, isAdminUser, loginLive, register, requestPasswordReset } from "../services/authService.js";
+import { useEffect, useRef, useState } from "react";
+import { AUTH_MODE_NOTICE, isAdminUser, loginLive, loginWithGoogle, register, requestPasswordReset } from "../services/authService.js";
+import { googleClientId, isGoogleConfigured, renderGoogleButton } from "../services/googleAuthService.js";
 import { navigate } from "../services/router.js";
 import { DemoNotice, FieldError } from "../components/eventBits.jsx";
 
@@ -44,6 +45,62 @@ function nextPath(next, user) {
   // Admins land in the admin greenhouse, members in their dashboard.
   if (isAdminUser(user)) return "/admin";
   return "/dashboard";
+}
+
+//
+// "Continue with Google" — one shared component for both auth pages.
+// Renders Google Identity Services' official button; the credential it
+// returns is exchanged by loginWithGoogle() for a real backend session.
+// Hidden entirely while VITE_GOOGLE_CLIENT_ID is unset, so dev machines
+// without the env var see exactly the page they had before.
+// (Also imported by JoinPage — Google emails skip the OTP gate because
+// Google already verified them.)
+//
+export function GoogleButton({ next }) {
+  const holderRef = useRef(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+  const [available] = useState(() => isGoogleConfigured());
+
+  useEffect(() => {
+    if (!available || !holderRef.current) return undefined;
+    let cancelled = false;
+    renderGoogleButton(holderRef.current, googleClientId(), async (credential) => {
+      if (cancelled) return;
+      setError("");
+      setBusy(true);
+      const res = await loginWithGoogle(credential);
+      if (cancelled) return;
+      setBusy(false);
+      if (!res.ok) {
+        setError(res.formError || "Google sign-in failed. Try again.");
+        return;
+      }
+      setDone(true);
+      setTimeout(() => navigate(nextPath(next, res.user)), 650);
+    }).then((res) => {
+      if (!cancelled && res && !res.ok) setError(res.formError || "");
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [available, next]);
+
+  if (!available) return null;
+  return (
+    <div className="auth-google">
+      <div className="auth-alt" role="separator" aria-label="or continue with Google">
+        <span className="auth-alt-line" aria-hidden="true" />
+        <span className="auth-alt-label">or</span>
+        <span className="auth-alt-line" aria-hidden="true" />
+      </div>
+      <div ref={holderRef} className="auth-google-btn" />
+      {busy && <p className="ev-success" role="status">Finishing Google sign-in…</p>}
+      {done && <p className="ev-success" role="status">Signed in with Google — taking you back…</p>}
+      {error && <p className="ev-formerror" role="alert">{error}</p>}
+    </div>
+  );
 }
 
 export function LoginPage({ next }) {
@@ -172,6 +229,7 @@ export function LoginPage({ next }) {
             <button className="btn btn-clay auth-submit" type="submit" disabled={busy}>
               {busy ? "Logging in…" : "Log in →"}
             </button>
+            <GoogleButton next={next} />
             <div className="auth-aux">
               <button type="button" className="ev-linkbtn" onClick={onForgotPassword} disabled={busy}>
                 Forgot password?
@@ -283,6 +341,7 @@ export function RegisterPage({ next }) {
             <button className="btn btn-clay auth-submit" type="submit" disabled={busy}>
               {busy ? "Sowing… (demo)" : "Create demo account →"}
             </button>
+            <GoogleButton next={next} />
             <p className="ev-switch auth-switch auth-switch-center">
               Already growing here? <a href={`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`}>Sign in →</a>
             </p>

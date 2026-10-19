@@ -1600,6 +1600,37 @@ footer::before {
   align-items: start;
 }
 
+/* ---------- google sign-in ---------- */
+.auth-google {
+  margin-top: 14px;
+}
+.auth-alt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 10px;
+}
+.auth-alt-line {
+  flex: 1;
+  height: 1px;
+  background: #d9cdb4;
+}
+.auth-alt-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.auth-google-btn {
+  display: flex;
+  justify-content: center;
+}
+.auth-google-btn iframe {
+  max-width: 100%;
+}
+
 /* ---------- auth responsive ---------- */
 @media (max-width: 920px) {
   .auth-grid { grid-template-columns: 1fr; max-width: 620px; }
