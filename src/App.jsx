@@ -410,9 +410,6 @@ export default function App() {
       <header className="hero" id="top">
         <div>
           <span className="eyebrow"><span className="dot">✿</span> admissions open · new members joining now</span>
-          <p style={{ marginTop: 12, display: "inline-block", fontFamily: "var(--mono)", fontSize: 12.5, lineHeight: 1.6, color: "#7a4a1f", background: "#fdf3d8", border: "1.5px dashed #d9a441", borderRadius: 10, padding: "8px 12px", maxWidth: "52ch" }}>
-            ⚠ Please do not create an account yet — accounts created now may be lost, as the database will be refreshed on completion of the website.
-          </p>
           <h1>
             Run by<br />
             <span className="italic-hand">students,</span><br />

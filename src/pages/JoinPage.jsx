@@ -499,7 +499,7 @@ export default function JoinPage() {
 
             <div className="join-actions">
               <button className="btn btn-clay auth-submit" type="submit" disabled={busy || !otpVerified}>
-                {busy ? "Joining… →" : otpVerified ? "Apply to join →" : "Verify email to apply →"}
+                {busy ? "Registering… →" : "Register →"}
               </button>
               <a className="btn btn-paper" href="/">
                 ← Back to sunlight
