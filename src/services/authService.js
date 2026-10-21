@@ -124,13 +124,14 @@ function toPublicUser(u) {
   };
 }
 
-/** True when the signed-in user may open /admin. */
+/** True when the signed-in user may open /admin. Client-side hint only —
+ * the real gate is the backend `requireAdmin` check (Firebase ID token +
+ * users/{uid}.role === "admin" or admin custom claim) enforced on every
+ * /api/admin/* call, plus a live /api/admin/me verification in AdminPage.
+ * Never trust localStorage alone — roles can be edited in devtools. */
 export function isAdminUser(user) {
   if (!user) return false;
-  if (user.role === "admin") return true;
-  // Seed-admin fallback so /admin stays reachable even if an old session
-  // was saved before `role` existed on the profile.
-  return String(user.email || "").toLowerCase() === "rishithmanchala989@gmail.com";
+  return user.role === "admin";
 }
 
 /**

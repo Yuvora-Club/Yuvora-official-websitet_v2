@@ -4,7 +4,7 @@
 // /api/announcements, which the member dashboard (/dashboard) renders live.
 
 import { useEffect, useState } from "react";
-import { getLiveSession, isAdminUser, logout, patchLiveSessionUser } from "../services/authService.js";
+import { getLiveSession, logout, patchLiveSessionUser } from "../services/authService.js";
 import { navigate } from "../services/router.js";
 import {
   createAnnouncement,
@@ -13,6 +13,7 @@ import {
   updateAnnouncement,
 } from "../services/announcementsService.js";
 import { createAdminUser, fetchAdminMe, fetchAdminUsers, updateAdminProfile } from "../services/adminService.js";
+import { createPlan, deletePlan, fetchPlans, updatePlan } from "../services/plansService.js";
 import { createGeneralEvent, createSportEvent, deleteGeneralEvent, deleteSportEvent, fetchEventRegistrations, fetchSportsMeta, fetchTeamRequests, listGeneralEvents, listSportEvents, listTeams, setTeamPaid, updateGeneralEvent, updateSportEvent } from "../services/sportsService.js";
 import { calcAge, displayAge } from "../utils/age.js";
 import VerifyPassTab from "./VerifyPassTab.jsx";
@@ -20,6 +21,8 @@ import VerifyPassTab from "./VerifyPassTab.jsx";
 const TABS = [
   { id: "announcements", label: "Announcements", icon: "📢" },
   { id: "verify", label: "Verify Pass", icon: "🎟" },
+  { id: "roster", label: "Club Roster", icon: "❧" },
+  { id: "plans", label: "Future Plans", icon: "✦" },
   { id: "sports", label: "Sports", icon: "⚽" },
   { id: "events", label: "Events", icon: "◈" },
   { id: "results", label: "Results", icon: "🏆" },
@@ -310,6 +313,7 @@ function AddUserTab() {
   const [phone, setPhone] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("admin");
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [sessionGone, setSessionGone] = useState(false);
@@ -345,21 +349,27 @@ function AddUserTab() {
       phone,
       birthDate: birthDate || undefined,
       password,
+      role,
     });
     setBusy(false);
     if (!res.ok) {
       setErrors(res.errors || {});
-      setFormError(res.formError || "Could not create the admin user — check the fields.");
+      setFormError(res.formError || "Could not create the user — check the fields.");
       setSessionGone(!!res.sessionExpired);
       return;
     }
-    setSuccess(`${res.user.fullName} is now an admin. They can log in and open /admin.`);
+    setSuccess(
+      res.user.role === "admin"
+        ? `${res.user.fullName} is now an admin. They can log in and open /admin.`
+        : `${res.user.fullName} is now a member. They can log in, but cannot open /admin.`
+    );
     setFullName("");
     setEmail("");
     setSchool("");
     setPhone("");
     setBirthDate("");
     setPassword("");
+    setRole("admin");
     refreshUsers();
   }
 
@@ -368,8 +378,8 @@ function AddUserTab() {
       <div className="join-card admin-card">
         <h3>Add user ＋</h3>
         <p className="join-sub">
-          Creates a Firebase account <b>with admin powers</b> — the new admin can post announcements and add more
-          admins. Age is computed from the birth date and increments every birthday.
+          Role is assigned <b>at creation</b> — pick <b>★ admin</b> to grant /admin access, or <b>member</b> for a
+          normal account that <b>cannot</b> open /admin. Age is computed from the birth date and increments every birthday.
         </p>
         {formError && (
           <p className="ev-formerror" role="alert">
@@ -420,9 +430,31 @@ function AddUserTab() {
               {errors.password && <span className="ev-error">{errors.password}</span>}
             </label>
           </div>
+          <div className="field auth-field">
+            <span className="auth-label" id="admin-new-role-label">Role assigned at creation</span>
+            <div className="maker-tags" role="group" aria-labelledby="admin-new-role-label">
+              <button
+                type="button"
+                className={role === "admin" ? "dash-tag maker-tag active" : "dash-tag maker-tag"}
+                onClick={() => setRole("admin")}
+                aria-pressed={role === "admin"}
+              >
+                ★ admin · can open /admin
+              </button>
+              <button
+                type="button"
+                className={role === "member" ? "dash-tag maker-tag active" : "dash-tag maker-tag"}
+                onClick={() => setRole("member")}
+                aria-pressed={role === "member"}
+              >
+                member · cannot open /admin
+              </button>
+            </div>
+            {errors.role && <span className="ev-error">{errors.role}</span>}
+          </div>
           <div className="dash-play-row">
             <button className="btn btn-clay dash-btn" type="submit" disabled={busy}>
-              {busy ? "Creating…" : "Create admin →"}
+              {busy ? "Creating…" : role === "admin" ? "Create admin →" : "Create member →"}
             </button>
           </div>
         </form>
@@ -430,7 +462,7 @@ function AddUserTab() {
 
       <div className="join-card admin-card">
         <h3>Admins & members ({users.length})</h3>
-        <p className="join-sub">Updates live — every admin you add appears here with powers.</p>
+        <p className="join-sub">Updates live — only ★ admin roles can open /admin. Members are blocked at the gate.</p>
         {loadingUsers ? (
           <p className="join-sub">Loading users…</p>
         ) : users.length === 0 ? (
@@ -927,6 +959,558 @@ function EventTeamsModal({ event, sports, onClose }) {
             ))
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function FuturePlansTab() {
+  const STATUS_META = {
+    todo: { label: "○ todo", cls: "dash-tag" },
+    "in-progress": { label: "● in progress", cls: "dash-tag" },
+    done: { label: "✓ done", cls: "dash-tag admin-tag" },
+  };
+  const PRIORITY_META = {
+    high: "▲ high",
+    medium: "◆ medium",
+    low: "▽ low",
+  };
+
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("all");
+  const [title, setTitle] = useState("");
+  const [details, setDetails] = useState("");
+  const [status, setStatus] = useState("todo");
+  const [priority, setPriority] = useState("medium");
+  const [dueDate, setDueDate] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDetails, setEditDetails] = useState("");
+  const [editStatus, setEditStatus] = useState("todo");
+  const [editPriority, setEditPriority] = useState("medium");
+  const [editDueDate, setEditDueDate] = useState("");
+  const [errors, setErrors] = useState({});
+  const [msg, setMsg] = useState({ type: "", text: "" });
+  const [busy, setBusy] = useState(false);
+
+  async function refresh() {
+    setLoading(true);
+    setMsg({ type: "", text: "" });
+    const res = await fetchPlans();
+    if (res.ok) {
+      setPlans(res.plans);
+    } else {
+      setMsg({ type: "error", text: res.formError || "Could not load future plans." });
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  function resetComposer() {
+    setTitle("");
+    setDetails("");
+    setStatus("todo");
+    setPriority("medium");
+    setDueDate("");
+    setErrors({});
+  }
+
+  function startEdit(p) {
+    setEditingId(p.id);
+    setEditTitle(p.title || "");
+    setEditDetails(p.details || "");
+    setEditStatus(p.status || "todo");
+    setEditPriority(p.priority || "medium");
+    setEditDueDate(p.dueDate || "");
+    setErrors({});
+    setMsg({ type: "", text: "" });
+  }
+
+  async function onCreate(e) {
+    e.preventDefault();
+    setErrors({});
+    setMsg({ type: "", text: "" });
+    setBusy(true);
+    const res = await createPlan({ title, details, status, priority, dueDate: dueDate || null });
+    setBusy(false);
+    if (!res.ok) {
+      setErrors(res.errors || {});
+      setMsg({ type: "error", text: res.formError || "Could not save the plan — check the fields." });
+      return;
+    }
+    setPlans((prev) => [res.plan, ...prev]);
+    resetComposer();
+    setMsg({ type: "success", text: "Plan pinned to the crew board ✓ — only admins can see this." });
+  }
+
+  async function onSaveEdit(id) {
+    setBusy(true);
+    const res = await updatePlan(id, {
+      title: editTitle,
+      details: editDetails,
+      status: editStatus,
+      priority: editPriority,
+      dueDate: editDueDate || null,
+    });
+    setBusy(false);
+    if (!res.ok) {
+      setErrors(res.errors || {});
+      setMsg({ type: "error", text: res.formError || "Could not save the changes." });
+      return;
+    }
+    setPlans((prev) => prev.map((p) => (p.id === id ? res.plan : p)));
+    setEditingId(null);
+    setMsg({ type: "success", text: "Plan updated ✓" });
+  }
+
+  async function onCycleStatus(p) {
+    const next = p.status === "todo" ? "in-progress" : p.status === "in-progress" ? "done" : "todo";
+    const res = await updatePlan(p.id, {
+      title: p.title,
+      details: p.details,
+      status: next,
+      priority: p.priority,
+      dueDate: p.dueDate,
+    });
+    if (res.ok) setPlans((prev) => prev.map((x) => (x.id === p.id ? res.plan : x)));
+    else setMsg({ type: "error", text: res.formError || "Could not update status." });
+  }
+
+  async function onDelete(id) {
+    if (!window.confirm("Delete this future plan? Only admins ever saw it.")) return;
+    const res = await deletePlan(id);
+    if (!res.ok) {
+      setMsg({ type: "error", text: res.formError || "Could not delete the plan." });
+      return;
+    }
+    setPlans((prev) => prev.filter((p) => p.id !== id));
+    if (editingId === id) setEditingId(null);
+  }
+
+  const filtered = plans.filter((p) => (filter === "all" ? true : p.status === filter));
+  const counts = {
+    all: plans.length,
+    todo: plans.filter((p) => p.status === "todo").length,
+    "in-progress": plans.filter((p) => p.status === "in-progress").length,
+    done: plans.filter((p) => p.status === "done").length,
+  };
+
+  return (
+    <div className="admin-tab">
+      <div className="join-card admin-card">
+        <h3>Club future plans ✦</h3>
+        <p className="join-sub">
+          Private crew todos — roadmaps, events to launch, gear to buy. <b>Only assigned admins</b> can see or edit this board. Members never see it.
+        </p>
+        {msg.text && (
+          <p className={msg.type === "success" ? "ev-success" : "ev-formerror"} role={msg.type === "success" ? "status" : "alert"}>
+            {msg.text}
+          </p>
+        )}
+        <form onSubmit={onCreate} noValidate>
+          <label className="field auth-field" htmlFor="plans-title">
+            <span className="auth-label">Plan title · {title.length}/120</span>
+            <input
+              id="plans-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Floodlit box-cricket finals in December"
+              maxLength={120}
+            />
+            {errors.title && <span className="ev-error">{errors.title}</span>}
+          </label>
+          <label className="field auth-field" htmlFor="plans-details">
+            <span className="auth-label">Details · {details.length}/2000</span>
+            <textarea
+              id="plans-details"
+              className="admin-textarea"
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              placeholder="Owner, budget, venue, first 3 steps…"
+              rows={3}
+              maxLength={2000}
+            />
+            {errors.details && <span className="ev-error">{errors.details}</span>}
+          </label>
+          <div className="auth-row">
+            <div className="field auth-field">
+              <span className="auth-label">Status</span>
+              <div className="maker-tags" role="group" aria-label="Plan status">
+                {Object.keys(STATUS_META).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    className={status === s ? "dash-tag maker-tag active" : "dash-tag maker-tag"}
+                    onClick={() => setStatus(s)}
+                    aria-pressed={status === s}
+                  >
+                    {STATUS_META[s].label}
+                  </button>
+                ))}
+              </div>
+              {errors.status && <span className="ev-error">{errors.status}</span>}
+            </div>
+            <div className="field auth-field">
+              <span className="auth-label">Priority</span>
+              <div className="maker-tags" role="group" aria-label="Plan priority">
+                {Object.keys(PRIORITY_META).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    className={priority === p ? "dash-tag maker-tag active" : "dash-tag maker-tag"}
+                    onClick={() => setPriority(p)}
+                    aria-pressed={priority === p}
+                  >
+                    {PRIORITY_META[p]}
+                  </button>
+                ))}
+              </div>
+              {errors.priority && <span className="ev-error">{errors.priority}</span>}
+            </div>
+          </div>
+          <div className="auth-row">
+            <label className="field auth-field" htmlFor="plans-due">
+              <span className="auth-label">Target date (optional)</span>
+              <input id="plans-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+              {errors.dueDate && <span className="ev-error">{errors.dueDate}</span>}
+            </label>
+          </div>
+          <div className="dash-play-row">
+            <button className="btn btn-clay dash-btn" type="submit" disabled={busy || title.trim().length < 3}>
+              {busy ? "Pinning…" : "Pin plan →"}
+            </button>
+            <button type="button" className="btn btn-paper dash-btn" disabled={busy || (!title && !details && !dueDate)} onClick={resetComposer}>
+              Clear ↻
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="join-card admin-card">
+        <h3>Crew board ({filtered.length}/{plans.length})</h3>
+        <p className="join-sub">Admin eyes only — tap a status pill to filter, tap a card&apos;s status to move it along.</p>
+        <div className="maker-tags" role="group" aria-label="Filter plans">
+          {[
+            { id: "all", label: `All (${counts.all})` },
+            { id: "todo", label: `○ Todo (${counts.todo})` },
+            { id: "in-progress", label: `● In progress (${counts["in-progress"]})` },
+            { id: "done", label: `✓ Done (${counts.done})` },
+          ].map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              className={filter === f.id ? "dash-tag maker-tag active" : "dash-tag maker-tag"}
+              onClick={() => setFilter(f.id)}
+              aria-pressed={filter === f.id}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <div className="dash-play-row">
+          <button type="button" className="btn btn-paper dash-btn" onClick={refresh} disabled={loading}>
+            {loading ? "Loading…" : "Refresh ↻"}
+          </button>
+        </div>
+        {loading ? (
+          <p className="join-sub">Loading future plans…</p>
+        ) : filtered.length === 0 ? (
+          <div className="notice-empty">
+            <span className="notice-empty-leaf" aria-hidden="true">✦</span>
+            <b>{plans.length === 0 ? "Board is empty — pin the first plan above." : "Nothing in this lane."}</b>
+            <p>{plans.length === 0 ? "Only admins will ever see what you pin here." : "Try another filter."}</p>
+          </div>
+        ) : (
+          <ul className="admin-list">
+            {filtered.map((p) => {
+              const meta = STATUS_META[p.status] || STATUS_META.todo;
+              return (
+                <li key={p.id} className="admin-item">
+                  {editingId === p.id ? (
+                    <div className="admin-edit">
+                      <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} maxLength={120} aria-label="Edit plan title" />
+                      <textarea value={editDetails} onChange={(e) => setEditDetails(e.target.value)} rows={3} maxLength={2000} aria-label="Edit plan details" />
+                      <div className="maker-tags" role="group" aria-label="Edit status">
+                        {Object.keys(STATUS_META).map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            className={editStatus === s ? "dash-tag maker-tag active" : "dash-tag maker-tag"}
+                            onClick={() => setEditStatus(s)}
+                            aria-pressed={editStatus === s}
+                          >
+                            {STATUS_META[s].label}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="maker-tags" role="group" aria-label="Edit priority">
+                        {Object.keys(PRIORITY_META).map((pr) => (
+                          <button
+                            key={pr}
+                            type="button"
+                            className={editPriority === pr ? "dash-tag maker-tag active" : "dash-tag maker-tag"}
+                            onClick={() => setEditPriority(pr)}
+                            aria-pressed={editPriority === pr}
+                          >
+                            {PRIORITY_META[pr]}
+                          </button>
+                        ))}
+                      </div>
+                      <input type="date" value={editDueDate} onChange={(e) => setEditDueDate(e.target.value)} aria-label="Edit due date" />
+                      <div className="dash-play-row">
+                        <button type="button" className="btn btn-clay dash-btn" onClick={() => onSaveEdit(p.id)} disabled={busy}>
+                          Save ✓
+                        </button>
+                        <button type="button" className="btn btn-paper dash-btn" onClick={() => setEditingId(null)} disabled={busy}>
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="admin-item-top">
+                        <b>{p.title}</b>
+                      </div>
+                      <div className="maker-tags">
+                        <button type="button" className={meta.cls} onClick={() => onCycleStatus(p)} title="Tap to move to next status">
+                          {meta.label} ↻
+                        </button>
+                        <span className="dash-tag">{PRIORITY_META[p.priority] || p.priority}</span>
+                        {p.dueDate && <span className="dash-tag">📅 {p.dueDate}</span>}
+                      </div>
+                      {p.details && <p className="admin-item-body">{p.details}</p>}
+                      <small className="admin-item-meta">
+                        {p.createdByName ? `by ${p.createdByName} · ` : ""}
+                        {p.createdAt ? new Date(p.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "—"}
+                        {p.updatedAt && p.updatedAt !== p.createdAt
+                          ? ` · edited ${new Date(p.updatedAt).toLocaleDateString(undefined, { day: "numeric", month: "short" })}`
+                          : ""}
+                      </small>
+                      <div className="dash-play-row">
+                        <button type="button" className="btn btn-paper dash-btn" onClick={() => startEdit(p)}>
+                          Edit ✎
+                        </button>
+                        <button type="button" className="btn btn-paper dash-btn" onClick={() => onDelete(p.id)}>
+                          Delete ✕
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ClubRosterTab() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [query, setQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
+  const [openUid, setOpenUid] = useState(null);
+
+  async function refresh() {
+    setLoading(true);
+    setError("");
+    const res = await fetchAdminUsers();
+    if (res.ok) {
+      setUsers(res.users || []);
+    } else {
+      setError(res.formError || "Could not load the roster.");
+    }
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  const personKey = (u) => u.uid || u.id;
+  const togglePerson = (uid) => setOpenUid((cur) => (cur === uid ? null : uid));
+
+  const q = query.trim().toLowerCase();
+  const filtered = users.filter((u) => {
+    if (roleFilter !== "all" && (u.role || "member") !== roleFilter) return false;
+    if (!q) return true;
+    return [u.fullName, u.email, u.school, u.phone, u.seedPassCode, u.birthDate]
+      .filter(Boolean)
+      .some((v) => String(v).toLowerCase().includes(q));
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
+    if (sortBy === "name") return String(a.fullName || "").localeCompare(String(b.fullName || ""));
+    if (sortBy === "oldest") return String(a.createdAt || "").localeCompare(String(b.createdAt || ""));
+    return String(b.createdAt || "").localeCompare(String(a.createdAt || ""));
+  });
+
+  const adminCount = users.filter((u) => u.role === "admin").length;
+  const memberCount = users.length - adminCount;
+
+  function exportCsv(list) {
+    const headers = ["Full name", "Email", "Phone", "School", "Birth date", "Age", "Role", "Seed pass", "Joined"];
+    const rows = list.map((u) => [
+      u.fullName || "",
+      u.email || "",
+      u.phone || "",
+      u.school || "",
+      u.birthDate || "",
+      displayAge(u) ?? "",
+      u.role || "member",
+      u.seedPassCode || "",
+      u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "",
+    ]);
+    const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const csv = [headers.map(esc).join(","), ...rows.map((r) => r.map(esc).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `yuvora-club-roster-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="admin-tab">
+      <div className="join-card admin-card">
+        <h3>Club Roster ❧</h3>
+        <p className="join-sub">
+          Every account on the roster — admins + members — with full details. Click a name to see everything on record.
+        </p>
+        {error && (
+          <p className="ev-formerror" role="alert">
+            {error} <a href="/login?next=%2Fadmin">Log in again →</a>
+          </p>
+        )}
+        <div className="maker-tags" aria-label="Roster totals">
+          <span className="dash-tag">❧ {users.length} total</span>
+          <span className="dash-tag">★ {adminCount} admins</span>
+          <span className="dash-tag">● {memberCount} members</span>
+          <span className="dash-tag">◈ {sorted.length} shown</span>
+        </div>
+        <div className="auth-row" style={{ marginTop: 14 }}>
+          <label className="field auth-field" htmlFor="roster-search">
+            <span className="auth-label">Search name, email, school, phone, seed pass</span>
+            <input
+              id="roster-search"
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="e.g. Aarav, DPS, YV-8930…"
+              autoComplete="off"
+            />
+          </label>
+          <label className="field auth-field" htmlFor="roster-sort">
+            <span className="auth-label">Sort</span>
+            <select id="roster-sort" className="admin-select" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="name">Name A–Z</option>
+            </select>
+          </label>
+        </div>
+        <div className="maker-tags" role="group" aria-label="Filter by role" style={{ marginTop: 4 }}>
+          {[
+            { id: "all", label: `All (${users.length})` },
+            { id: "admin", label: `★ Admins (${adminCount})` },
+            { id: "member", label: `Members (${memberCount})` },
+          ].map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              className={roleFilter === f.id ? "dash-tag maker-tag active" : "dash-tag maker-tag"}
+              onClick={() => setRoleFilter(f.id)}
+              aria-pressed={roleFilter === f.id}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        <div className="dash-play-row">
+          <button type="button" className="btn btn-paper dash-btn" onClick={refresh} disabled={loading}>
+            {loading ? "Loading…" : "Refresh ↻"}
+          </button>
+          <button
+            type="button"
+            className="btn btn-clay dash-btn"
+            onClick={() => exportCsv(sorted)}
+            disabled={loading || sorted.length === 0}
+          >
+            Export CSV ↓
+          </button>
+        </div>
+      </div>
+
+      <div className="join-card admin-card">
+        <h3>Accounts ({sorted.length})</h3>
+        {loading ? (
+          <p className="join-sub">Loading the roster…</p>
+        ) : sorted.length === 0 ? (
+          <div className="notice-empty">
+            <span className="notice-empty-leaf" aria-hidden="true">❧</span>
+            <b>{users.length === 0 ? "No accounts yet." : "Nobody matches that search."}</b>
+            <p>{users.length === 0 ? "New signups will appear here." : "Try a different name, email or seed-pass code."}</p>
+          </div>
+        ) : (
+          <ul className="admin-list">
+            {sorted.map((u) => {
+              const key = personKey(u);
+              const open = openUid === key;
+              return (
+                <li key={key} className="admin-item admin-user">
+                  <div className="admin-item-top">
+                    <button
+                      type="button"
+                      className="person-name"
+                      onClick={() => togglePerson(key)}
+                      aria-expanded={open}
+                    >
+                      {u.fullName || "—"} {open ? "▾" : "▸"}
+                    </button>
+                    <span className={u.role === "admin" ? "dash-tag admin-tag" : "dash-tag"}>
+                      {u.role === "admin" ? "★ admin" : "member"}
+                    </span>
+                    {u.seedPassCode && <span className="dash-tag">{u.seedPassCode}</span>}
+                  </div>
+                  <small className="admin-item-meta">
+                    {u.email || "—"} · {u.school || "no school"} · {u.phone || "no phone"} · age {displayAge(u) ?? "—"}
+                    {u.createdAt
+                      ? ` · joined ${new Date(u.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`
+                      : ""}
+                  </small>
+                  {open && (
+                    <div className="person-details">
+                      <PersonDetails person={u} fallbackName={u.fullName} />
+                      <dl className="dash-facts" style={{ marginTop: 8 }}>
+                        <div>
+                          <dt>Seed pass</dt>
+                          <dd>{u.seedPassCode || "—"}</dd>
+                        </div>
+                        <div>
+                          <dt>User ID</dt>
+                          <dd style={{ overflowWrap: "anywhere" }}>{key || "—"}</dd>
+                        </div>
+                      </dl>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
     </div>
   );
@@ -1673,6 +2257,47 @@ function ProfileTab({ sessionUser }) {
 
 export default function AdminPage({ user }) {
   const [tab, setTab] = useState("announcements");
+  // Server-verified admin gate: localStorage `role` is only a hint.
+  // The backend re-checks Firebase ID token + users/{uid}.role on every
+  // /api/admin/* call — only assigned admins (role === "admin" in RTDB or
+  // an admin custom claim) ever get `ok`. A tampered local role can't pass.
+  // Existing accounts keep access: we always ask the server when signed in,
+  // even if the saved local session is stale (pre-role), then heal it.
+  const [serverCheck, setServerCheck] = useState({ state: "idle", admin: null, error: "" });
+
+  useEffect(() => {
+    let alive = true;
+    if (!user) {
+      setServerCheck({ state: "idle", admin: null, error: "" });
+      return () => {
+        alive = false;
+      };
+    }
+    setServerCheck({ state: "checking", admin: null, error: "" });
+    (async () => {
+      const res = await fetchAdminMe();
+      if (!alive) return;
+      if (res.ok && res.admin && res.admin.role === "admin") {
+        // Heal stale local sessions (e.g. saved before `role` existed) so
+        // existing assigned admins never lose the nav + gate on refresh.
+        try {
+          patchLiveSessionUser({ role: "admin" });
+        } catch {
+          /* healing is best-effort */
+        }
+        setServerCheck({ state: "ok", admin: res.admin, error: "" });
+      } else {
+        setServerCheck({
+          state: "denied",
+          admin: null,
+          error: res.formError || "This account is not an assigned admin.",
+        });
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [user?.id]);
 
   function onLogout() {
     logout();
@@ -1707,21 +2332,49 @@ export default function AdminPage({ user }) {
     );
   }
 
-  if (!isAdminUser(user)) {
+  const verifiedUser = serverCheck.admin || user;
+  const fullName = verifiedUser.fullName || verifiedUser.name || "Admin";
+
+  // While we ask the server, don't trust the local role yet — this keeps
+  // existing assigned admins (even with a stale pre-role local session)
+  // from flashing a false "Not an admin".
+  if (serverCheck.state === "checking" || serverCheck.state === "idle") {
     return (
       <section className="wrap members-page dash-wrap">
         <div className="sec-head reveal in">
           <span className="sec-no">★ admin</span>
           <h2>
-            Not an <em>admin</em>
+            Checking <em>access…</em>
+          </h2>
+          <p>Verifying your admin assignment with the server — one moment.</p>
+        </div>
+        <div className="dash-gate reveal in">
+          <div className="dash-gate-card">
+            <span className="dash-sticker" aria-hidden="true">★ verifying</span>
+            <p className="dash-hand">asking the server if you&apos;re on the admin list…</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (serverCheck.state === "denied") {
+    return (
+      <section className="wrap members-page dash-wrap">
+        <div className="sec-head reveal in">
+          <span className="sec-no">★ admin</span>
+          <h2>
+            Access <em>restricted</em>
           </h2>
           <p>
-            <b>{user.fullName || user.name || "Seedling"}</b>, this corner is for admins only. Your dashboard is
-            waiting instead.
+            <b>{user.fullName || user.name || "Seedling"}</b>, only assigned admins can open this page.{" "}
+            {serverCheck.error || "Your account is not on the admin list."}
           </p>
         </div>
         <div className="dash-gate reveal in">
           <div className="dash-gate-card">
+            <span className="dash-sticker" aria-hidden="true">assigned admins only ★</span>
+            <p className="dash-hand">if you should be an admin, ask an existing admin to add you via Add User.</p>
             <div className="members-cta">
               <a className="btn btn-clay" href="/dashboard">
                 Back to dashboard →
@@ -1735,8 +2388,6 @@ export default function AdminPage({ user }) {
       </section>
     );
   }
-
-  const fullName = user.fullName || user.name || "Admin";
 
   return (
     <section className="wrap members-page dash-wrap">
@@ -1758,8 +2409,8 @@ export default function AdminPage({ user }) {
             </span>
             <div className="dash-who">
               <b>{fullName}</b>
-              <small>{user.email || "—"}</small>
-              <span className="dash-tag admin-tag">★ admin</span>
+              <small>{verifiedUser.email || "—"}</small>
+              <span className="dash-tag admin-tag">★ admin · verified</span>
             </div>
           </div>
 
@@ -1818,6 +2469,10 @@ export default function AdminPage({ user }) {
             <AnnouncementsTab />
           ) : tab === "verify" ? (
             <VerifyPassTab />
+          ) : tab === "roster" ? (
+            <ClubRosterTab />
+          ) : tab === "plans" ? (
+            <FuturePlansTab />
           ) : tab === "sports" ? (
             <SportsTab />
           ) : tab === "events" ? (
@@ -1827,7 +2482,7 @@ export default function AdminPage({ user }) {
           ) : tab === "add-user" ? (
             <AddUserTab />
           ) : (
-            <ProfileTab sessionUser={user} />
+            <ProfileTab sessionUser={verifiedUser} />
           )}
         </div>
       </div>
